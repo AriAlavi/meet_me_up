@@ -16,7 +16,7 @@
 <script src="{% static 'main/main.js' %}"></script>
 <link rel="stylesheet" href="{% static 'main/main.css' %}">
 
-<ul class="topnav">
+<ul class="topnav" style="margin-bottom: 10px;">
     {% if not request.user.profile %}
       <li><a class="active" href="{% url 'login' %}">Login</a></li>
       <li><a class="active" href="{% url 'register' %}">Register</a></li>
