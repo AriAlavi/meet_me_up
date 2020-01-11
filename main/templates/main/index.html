@@ -7,6 +7,7 @@
             <p id='dates'> {{E.start_date}} - {{E.end_date}} </p>
             <p id='code_name'> Code Name: {{E.code_name}}</p>
             <p id='creator'> Creator: {{E.creator}} </p>
+            <a href="{%url 'event' code_name=E.code_name%}" style="color:white"> Link </a>
         </div>
     {% endfor %}
 {% endblock %}
