@@ -19,34 +19,32 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 
-# SECRET_FILE_PATH = os.path.join(BASE_DIR, "secret_info.json")
-# try:
-#     SECRET_FILE = open(SECRET_FILE_PATH, "r+")
-#     SECRET_DATA = json.load(SECRET_FILE)
-# except FileNotFoundError:
-#     SECRET_FILE = open(SECRET_FILE_PATH, "w+")
-#     SECRET_DATA = {}
+SECRET_FILE_PATH = os.path.join(BASE_DIR, "secret_info.json")
+try:
+    SECRET_FILE = open(SECRET_FILE_PATH, "r+")
+    SECRET_DATA = json.load(SECRET_FILE)
+except FileNotFoundError:
+    SECRET_FILE = open(SECRET_FILE_PATH, "w+")
+    SECRET_DATA = {}
 
 
 
-# load_secret = (lambda x: json.load(SECRET_FILE))[x])
-SECRET_KEY = "^%yv5k)b&h5sf@(w)l=_z2(9pg_q8@kz=iees$34y2pjk8lk%^"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-# try:
-#     SECRET_KEY = SECRET_DATA["SECRET_KEY"]
-# except:
-#     SECRET_KEY = get_random_secret_key()
-#     SECRET_DATA["SECRET_KEY"] = SECRET_KEY
+try:
+    SECRET_KEY = SECRET_DATA["SECRET_KEY"]
+except:
+    SECRET_KEY = get_random_secret_key()
+    SECRET_DATA["SECRET_KEY"] = SECRET_KEY
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production! Don't tell me what to do!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'meetmeup.xyz']
+ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'www.meetmeup.xyz']
 
 
 # Application definition
@@ -142,7 +140,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-# SECRET_FILE.close()
-# SECRET_FILE = open(SECRET_FILE_PATH, "w+")
-# json.dump(SECRET_DATA, SECRET_FILE)
-# SECRET_FILE.close()
+SECRET_FILE.close()
+SECRET_FILE = open(SECRET_FILE_PATH, "w+")
+json.dump(SECRET_DATA, SECRET_FILE)
+SECRET_FILE.close()
