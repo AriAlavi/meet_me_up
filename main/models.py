@@ -9,6 +9,7 @@ class Profile(models.Model):
         return str(self.user)
 
 class Event(models.Model):
+    code_name = models.SlugField(unique=True, max_length=50)
     title = models.CharField(max_length=50)
     start_date = models.DateTimeField()
     end_Date = models.DateTimeField()
