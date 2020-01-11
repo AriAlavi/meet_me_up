@@ -50,7 +50,7 @@ function getData(url, header){
     })
     Object.keys(CACHE).forEach(function(key){
         if(key == attribute){
-            cacheHas = truel
+            return CACHE[key]; //key is a string, so could the problem be that we were indexing using a string???
         }
     })
     if(cacheHas){

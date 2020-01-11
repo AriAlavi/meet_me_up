@@ -1,6 +1,1122 @@
 {% extends "main/base.html" %}
 
 {% block content %}
+	<script type="text/javascript">
+  jQuery.noConflict();
+
+  var AnchorRow=0;
+  var AnchorColumn=0;
+  var HoverRow=0;
+  var HoverColumn=0;
+  var WriteMode="";
+  var Dates = [];
+  var xMousePos;
+  var yMousePos;
+  var xMouseRef;
+  var yMouseRef;
+  var count=0;
+  var Months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var DaysOfWeek = ["S","M","T","W","R","F","S"];
+
+  if (document.layers) { // Netscape
+    document.captureEvents(Event.MOUSEMOVE);
+    document.onmousemove = captureMousePosition;
+  } else if (document.all) { // Internet Explorer
+    document.onmousemove = captureMousePosition;
+  } else if (document.getElementById) { // Netscape 6
+    document.onmousemove = captureMousePosition;
+  }
+
+  var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel" //FF doesn't recognize mousewheel as of FF3.x
+ 
+  function wheel(event){
+    var evt=window.event || event //equalize event object
+    var delta=evt.detail? evt.detail*(-240) : evt.wheelDelta
+    delta = delta/Math.abs(delta);
+//    ShiftCalendar(-7*delta);
+  }
+
+  function captureMousePosition(e) {
+    if (document.layers) {
+        xMousePos = e.pageX;
+        yMousePos = e.pageY;
+        xMousePosMax = window.innerWidth+window.pageXOffset;
+        yMousePosMax = window.innerHeight+window.pageYOffset;
+    } else if (document.all) {
+        xMousePos = window.event.x+document.body.scrollLeft;
+        yMousePos = window.event.y+document.body.scrollTop;
+        xMousePosMax = document.body.clientWidth+document.body.scrollLeft;
+        yMousePosMax = document.body.clientHeight+document.body.scrollTop;
+    } else if (document.getElementById) {
+        xMousePos = e.pageX;
+        yMousePos = e.pageY;
+        xMousePosMax = window.innerWidth+window.pageXOffset;
+        yMousePosMax = window.innerHeight+window.pageYOffset;
+    }
+  }
+  
+  function MouseDownDate(Row,Column) {
+    IsMouseDownDates=true;
+    AnchorRow=Row;
+    AnchorColumn=Column;
+    HoverRow=Row;
+    HoverColumn=Column;
+    if (ArraySearch(Dates,document.getElementById("DateOf-"+Row+"-"+Column).value)) {
+      WriteMode = "erase";
+    } else {
+      WriteMode = "write";
+    }
+    ReColor();
+  }
+
+  function MouseOverDate(Row,Column) {
+    if (IsMouseDownDates) {
+      HoverRow=Row;
+      HoverColumn=Column;
+      ReColor();
+    }
+  }
+
+  function AddHighlightedDates(HighlightedDates) { 
+    var DateNum=-1;
+	while (DateNum < HighlightedDates.length) {
+      Dates.push(HighlightedDates[DateNum]);
+      DateNum++;
+    }
+    Dates = Unique(Dates);
+    document.getElementById("PossibleDates").value = Dates.join("|");
+  }
+
+  function RemoveHighlightedDates(HighlightedDates) { 
+    var DateNum=-1;
+    NewDates = [];
+	while (DateNum < Dates.length) {
+      if (!ArraySearch(HighlightedDates,Dates[DateNum])) {
+        NewDates.push(Dates[DateNum]);
+      }
+      DateNum++;
+    }
+    Dates = Unique(NewDates);
+    document.getElementById("PossibleDates").value = Dates.join("|");
+  }
+
+  function Unique(InputArray) {
+    var a = [];
+    for(var i=0; i<InputArray.length; i++) {
+      unique = 1;
+      for(var j=i+1; j<InputArray.length; j++) {
+        if (InputArray[i] == InputArray[j]) {unique = 0;}
+      }
+      if (unique&&(InputArray[i]!=null)&&(InputArray[i]!="")) { a.push(InputArray[i]); }
+    }
+    return a.sort();
+  }
+
+  function MouseUp() {
+
+    if (WriteMode!="") {
+      var HighlightedDates = [];
+      for (Row=1;Row<=6;Row++) {
+        for (Column=1;Column<=7;Column++) {
+          if (((AnchorRow-Row)*(Row-HoverRow)>=0) && ((AnchorColumn-Column)*(Column-HoverColumn)>=0)) {
+            HighlightedDates.push(document.getElementById("DateOf-"+Row+"-"+Column).value);
+          }
+          document.getElementById("Day-"+Row+"-"+Column).style.border='1px solid black';
+          document.getElementById("Day-"+Row+"-"+Column).style.padding='2px';
+          document.getElementById("Day-"+Row+"-"+Column).style.margin='1px';
+        }
+      }
+
+      if (WriteMode == "write") {
+        AddHighlightedDates(HighlightedDates);
+      } else { // WriteMode == "erase"
+        RemoveHighlightedDates(HighlightedDates);
+      }
+    }
+    WriteMode = "";
+
+    IsMouseDownDates=false;
+    IsMouseDownSideLabel=false;
+    IsMouseDownTopLabel=false;
+
+  }
+
+  function ArraySearch(arr, obj) {
+    for(var i=0; i<arr.length; i++) {
+      if (arr[i] == obj) return true;
+    }
+    return false;
+  }
+
+  function ShiftCalendar(Delta) {
+    for (Row=1;Row<=5;Row++) {
+      var ThisWeek=false;
+      for (Column=1;Column<=7;Column++) {
+        var DateOfCell = document.getElementById("DateOf-"+Row+"-"+Column).value.split("-");
+        t = new Date(DateOfCell[0],DateOfCell[1]-1,DateOfCell[2],12,0);
+        t.setTime(t.getTime()+60*60*24*1000*Delta);
+        var Month = t.getMonth()+1;
+        if (Month<10) { Month = '0'+Month; }
+
+        var DayOfMonth = t.getDate();
+        if (DayOfMonth<10) { DayOfMonth = '0'+DayOfMonth; }
+
+        var FullDateString = t.getFullYear() + "-" + Month + "-" + DayOfMonth;
+
+        document.getElementById("DateOf-"+Row+"-"+Column).value = FullDateString;
+        if ((Row==1)&&(Column==1)) {
+          document.getElementById("TopLeftDate").value = FullDateString;
+        }
+        if (FullDateString == DateLoaded) {
+          document.getElementById("Day-"+Row+"-"+Column).style.fontWeight = "bold";
+          ThisWeek=true;
+        } else {
+          document.getElementById("Day-"+Row+"-"+Column).style.fontWeight = "normal";
+        }
+        document.getElementById("Day-"+Row+"-"+Column).innerHTML = t.getDate();
+
+      }
+
+      var DateOfCell = document.getElementById("DateOf-"+Row+"-1").value.split("-");
+      var DateOfCell2 = document.getElementById("DateOf-"+Row+"-7").value.split("-");
+      var MonthName; var Year;
+
+      if (DateOfCell[1]==DateOfCell2[1]) {
+        MonthName = Months[DateOfCell[1]-1];
+      } else {
+        MonthName = Months[DateOfCell[1]-1]+"/"+Months[DateOfCell2[1]-1];
+      }
+      if (ThisWeek) {
+        document.getElementById("Month-"+Row).innerHTML = "<b>"+ MonthName +"</b>";
+      } else {
+        document.getElementById("Month-"+Row).innerHTML = MonthName;
+      }
+
+      if (DateOfCell[0]==DateOfCell2[0]) {
+        Year = DateOfCell[0];
+      } else {
+        Year = DateOfCell[0]+"/"+DateOfCell2[0];
+      }
+      if (ThisWeek) {
+        document.getElementById("Year-"+Row).innerHTML = "<b>"+ Year +"</b>";
+      } else {
+        document.getElementById("Year-"+Row).innerHTML = Year;
+      }
+
+    }
+
+    for (Column=1;Column<=7;Column++) {
+      var DateOfCell = document.getElementById("DateOf-1-"+Column).value.split("-");
+      var t = new Date(DateOfCell[0],DateOfCell[1]-1,DateOfCell[2],12,0);
+      document.getElementById("DayOfWeek-"+Column).innerHTML = DaysOfWeek[t.getDay()];
+      document.getElementById("DateOf-6-"+Column).value = t.getDay();
+    }
+
+    ReColor();
+  }
+
+  function ShiftToDate(NewTopLeftDate,ShiftToLeft) {
+     var CalendarStartTimeString = document.getElementById("DateOf-1-1").value.split("-");
+     CalendarStartTime = new Date(CalendarStartTimeString[0],CalendarStartTimeString[1]-1,CalendarStartTimeString[2],12,0);
+     var NewStartTimeString = NewTopLeftDate.split("-");
+     NewStartTime = new Date(NewStartTimeString[0],NewStartTimeString[1]-1,NewStartTimeString[2],12,0);
+
+	 ShiftDays = (NewStartTime.getTime() - CalendarStartTime.getTime())/(60*60*24*1000);
+     if (ShiftToLeft) {
+       ShiftCalendar(ShiftDays);
+     } else {
+       ShiftCalendar(7*Math.floor(ShiftDays/7));
+     }
+  }
+
+  function ReColorOld() {
+    for (Row=1;Row<=6;Row++) {
+      for (Column=1;Column<=7;Column++) {
+        if ((WriteMode!="") && ((AnchorRow-Row)*(Row-HoverRow)>=0) && ((AnchorColumn-Column)*(Column-HoverColumn)>=0)) {
+
+          if (WriteMode == "write") {
+            document.getElementById("Day-"+Row+"-"+Column).style.backgroundColor='green';
+            document.getElementById("Day-"+Row+"-"+Column).style.color='white';
+          } else {
+            document.getElementById("Day-"+Row+"-"+Column).style.backgroundColor='#ffdede';
+            document.getElementById("Day-"+Row+"-"+Column).style.color='black';
+          }
+          document.getElementById("Day-"+Row+"-"+Column).style.border='0px solid black';
+          document.getElementById("Day-"+Row+"-"+Column).style.padding='4px';
+          document.getElementById("Day-"+Row+"-"+Column).style.margin='0px';
+        } else {
+          document.getElementById("Day-"+Row+"-"+Column).style.border='1px solid black';
+          document.getElementById("Day-"+Row+"-"+Column).style.padding='2px';
+          document.getElementById("Day-"+Row+"-"+Column).style.margin='1px';
+
+          if (ArraySearch(Dates,document.getElementById("DateOf-"+Row+"-"+Column).value)) {
+            document.getElementById("Day-"+Row+"-"+Column).style.backgroundColor='green';
+            document.getElementById("Day-"+Row+"-"+Column).style.color='white';
+          } else {
+            document.getElementById("Day-"+Row+"-"+Column).style.backgroundColor='#ffdede';
+            document.getElementById("Day-"+Row+"-"+Column).style.color='black';
+          }
+
+        }
+      }
+    }
+  }
+
+  function DateTypesChanged() {
+    if (document.getElementById("DateTypes").value == "SpecificDates") {
+	  document.getElementById("SpecificDates").style.display = '';
+	  document.getElementById("DaysOfTheWeek").style.display = 'none';
+	  document.getElementById("Today").style.display = '';
+	} else {
+	  document.getElementById("SpecificDates").style.display = 'none';
+	  document.getElementById("DaysOfTheWeek").style.display = '';
+	  document.getElementById("Today").style.display = 'none';
+	}
+  }
+  
+  function PageLoaded() {
+    var select = document.getElementById("ParticipantTimeZone");
+          timezones = moment.tz.names();
+      var timezone = moment.tz.guess();
+      document.getElementById("ParticipantTimeZone").style.display='';
+      document.getElementById("YourTimeZone").innerHTML = "Your Time Zone: ";
+
+      for(var i = 0; i < timezones.length; i++) {
+        var opt = timezones[i];
+        var el = document.createElement("option");
+        el.textContent = opt;
+        el.value = opt;
+        select.appendChild(el);
+        if (timezone == opt) select.options[i].selected = true;
+      }
+      if (timezone != "America/Los_Angeles") {
+        LoadAvailabilityGrids();
+      }
+      }
+
+  function LoadAvailabilityGrids() {
+    participantTimeZone = document.getElementById("ParticipantTimeZone").selectedOptions[0].value;
+    new Ajax.Request("AvailabilityGrids.php", {
+      method: "post",
+      parameters: "id=8563289&code=QMqrD&participantTimeZone=" + participantTimeZone,
+      asynchronous:true,
+      onSuccess:function(t) { 
+        document.getElementById("AvailabilityGrids").innerHTML = t.responseText;
+        if (UserID) {
+          document.getElementById("SignIn").style.display='none';
+          document.getElementById("YouGrid").style.display='';
+          document.getElementById("UserName").innerHTML=PeopleNames[PeopleIDs.indexOf(UserID)];
+          ReColorIndividual();
+        }
+      }
+    });
+
+  }
+  
+  
+  /******* STUFF WRITTEN FOR NEW VERSION *******/
+  
+  
+  document.ondragstart=function(){return false;};
+  document.onmouseup=SelectStop;
+  var ChangeToAvailable=false;
+  var IsMouseDown=false;
+  var PeopleNames=new Array();
+  var PeopleIDs=new Array();
+  var UserID=0;
+  var TimeOfSlot=new Array();
+  var AvailableAtSlot=new Array();
+  var Col = new Array();
+  var Row = new Array();
+  var FromCol=-1; var ToCol=-1;
+  var FromRow=-1; var ToRow=-1;
+  
+  function ReColorIndividual() {
+    for (var i=0;i<TimeOfSlot.length;i++) {
+      if (FromCol<ToCol) { ColA=FromCol; ColB=ToCol; } else { ColA=ToCol; ColB=FromCol; }
+      if (FromRow<ToRow) { RowA=FromRow; RowB=ToRow; } else { RowA=ToRow; RowB=FromRow; }
+
+      var currentElement = document.getElementById("YouTime"+TimeOfSlot[i]);
+      var dataCol = Number(currentElement.getAttribute("data-col"));
+      var dataRow = Number(currentElement.getAttribute("data-row"));
+      
+      var WithinX = ((ColA<=dataCol)&&(dataCol<=ColB));
+      var WithinY = ((RowA<=dataRow)&&(dataRow<=RowB));
+
+      if (ChangeToAvailable) NewColor="#339900"; else NewColor="#ffdede";
+      if (WithinX && WithinY && IsMouseDown) {
+        currentElement.style.background=NewColor;
+        currentElement.style.borderColor=NewColor;
+        if (ColA==dataCol) currentElement.style.borderLeftColor="black";
+        if (ColB==dataCol) currentElement.style.borderRightColor="black";
+        if (RowA==dataRow) currentElement.style.borderTopColor="black";
+        if (RowB==dataRow) currentElement.style.borderBottomColor="black";
+      } else {
+        if (-1 != AvailableAtSlot[i].indexOf(UserID) ) {
+          currentElement.style.background="#339900";
+          currentElement.style.borderColor="black";          
+        } else {
+          currentElement.style.background="#ffdede";
+          currentElement.style.borderColor="black";
+        }
+      }
+    }
+  }
+  
+  function ReColorGroup() {
+    var MinAvailable = 10000; var MaxAvailable=0;
+    var SelfIsAvailable = false;
+    for (var i=0;i<AvailableAtSlot.length;i++) {
+      if (AvailableAtSlot[i].length<MinAvailable) MinAvailable = AvailableAtSlot[i].length;
+      if (AvailableAtSlot[i].length>MaxAvailable) MaxAvailable = AvailableAtSlot[i].length;
+      if (AvailableAtSlot[i].indexOf(UserID)!=-1) SelfIsAvailable = true;
+    }
+    if ((AvailableIDs.indexOf(UserID)!=-1)&&(!SelfIsAvailable)) {
+      SplitSpot = AvailableIDs.indexOf(UserID);
+      AvailableIDs.splice(SplitSpot,1);
+    } else if ((AvailableIDs.indexOf(UserID)==-1)&&SelfIsAvailable)
+      AvailableIDs.push(UserID);
+      
+    document.getElementById("MinAvailable").innerHTML = MinAvailable+"/"+AvailableIDs.length;
+    document.getElementById("MaxAvailable").innerHTML = MaxAvailable+"/"+AvailableIDs.length;
+    
+    TableStart = "<table width=100 height=10 cellpadding=0 cellspacing=0 style='border: solid 1px black'><tr>";
+    TableEnd = "</tr></table>";
+    TableContent = "";
+    for (var i=MinAvailable; i<=MaxAvailable; i++) {
+      Red = Green = Blue = Math.round(255/2);
+      if (MinAvailable!=MaxAvailable) {
+        Red = Math.round(((204)*(MaxAvailable-i)/(MaxAvailable-MinAvailable))+51);
+        Green = Math.round(((102)*(MaxAvailable-i)/(MaxAvailable-MinAvailable))+153);
+        Blue = Math.round(((255)*(MaxAvailable-i)/(MaxAvailable-MinAvailable))+0);
+      }
+
+      TableContent += "<td bgcolor=#" + (Red*256*256+Green*256+Blue).toString(16) + ">&nbsp;</td>";
+    }
+    
+    document.getElementById("GroupKey").innerHTML = TableStart+TableContent+TableEnd;
+    
+    for (var i=0;i<AvailableAtSlot.length;i++) {
+      Red = Green = Blue = Math.round(255/2);
+      if (MinAvailable!=MaxAvailable) {
+        Red = Math.round(((204)*(MaxAvailable-AvailableAtSlot[i].length)/(MaxAvailable-MinAvailable))+51);
+        Green = Math.round(((102)*(MaxAvailable-AvailableAtSlot[i].length)/(MaxAvailable-MinAvailable))+153);
+        Blue = Math.round(((255)*(MaxAvailable-AvailableAtSlot[i].length)/(MaxAvailable-MinAvailable))+0);
+      }
+      document.getElementById("GroupTime"+TimeOfSlot[i]).style.background="#"+(Red*256*256+Green*256+Blue).toString(16);
+    }
+  }
+  
+  function ShowSlot(Time) {
+    e = document.getElementById("ParticipantTimeZone");
+    timezone = e[e.selectedIndex].value;
+    
+    if (isNaN(Time)||(Time==0)) {
+      document.getElementById("AvailableDate").innerHTML = "&nbsp;";
+      document.getElementById("Available").innerHTML = "";
+      document.getElementById("Unavailable").innerHTML = "";
+      document.getElementById("AvailableFraction").innerHTML = "0/"+AvailableIDs.length;
+      return;
+    }
+
+    AvailableList = "";
+    UnavailableList = "";
+    AvailableCount=0;
+    Count=0;
+    for (var i=0;i<AvailableIDs.length;i++) {
+      Count++;
+      var found = (-1 != AvailableAtSlot[TimeOfSlot.indexOf(Time)].indexOf(AvailableIDs[i]) );
+      if (found) {
+        AvailableList += PeopleNames[PeopleIDs.indexOf(AvailableIDs[i])]+"<br>";
+        AvailableCount++;
+      } else
+        UnavailableList += PeopleNames[PeopleIDs.indexOf(AvailableIDs[i])]+"<br>";
+    }
+    document.getElementById("Available").innerHTML = AvailableList;
+    document.getElementById("Unavailable").innerHTML = UnavailableList;
+    document.getElementById("AvailableFraction").innerHTML = AvailableCount+"/"+Count;
+    
+    var date = new Date(Time*1000);
+
+    var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var monthName = monthNames[moment.tz(date,timezone).format('M')-1];
+    
+    var dayOfWeekNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    
+    var dayOfWeekName = dayOfWeekNames[moment.tz(date,timezone).format('e')];
+
+    var dayOfMonth = moment.tz(date,timezone).format('D');
+    
+    var hours = moment.tz(date,timezone).format('H');
+    var suffix = "am"; if (hours>=12) suffix="pm";
+    if (hours>12) hours=hours-12;
+    if (hours==0) hours=12;
+    var minutes = "0" + date.getUTCMinutes();
+    var year = moment.tz(date,timezone).format('YYYY');
+    var timeString = hours + ':' + minutes.substr(-2) + " " + suffix ;
+    
+    document.getElementById("AvailableDate").innerHTML = timeString + " on " + dayOfWeekName 
+      + ", " + monthName + ' ' + dayOfMonth + ", " + year;
+    document.getElementById("SlotAvailability").style.display='';
+    document.getElementById("LeftPanel").style.display='none';
+  }
+
+  function ShowSlotByTouch(event) {
+    if (event.touches.length==1) {
+      var touch = event.touches[0];
+      var elem = document.elementFromPoint(touch.clientX, touch.clientY);
+      var Time = Number(elem.id.replace('GroupTime', ''));
+      ShowSlot(Time);
+    }
+  }
+
+  function ShowSlotByTouchMove(event) {
+    if (event.touches.length==1) {
+      event.preventDefault();
+    }
+    ShowSlotByTouch(event);
+  }
+
+  function RestoreLeftSide(event) {
+    document.getElementById("SlotAvailability").style.display='none';
+    document.getElementById("LeftPanel").style.display='';
+  }
+
+  function ProcessLogin() {
+
+    var parameters = "id=8563289"
+               +"&name="+document.getElementById('name').value
+               +"&password="+document.getElementById('password').value;
+    new Ajax.Request("ProcessLogin.php", {
+      method: "post",
+      parameters: "id=8563289"
+               +"&name="+document.getElementById('name').value
+               +"&password="+document.getElementById('password').value,
+      asynchronous:true,
+      onSuccess:function(t) { 
+        PersonID = parseInt(t.responseText);
+        if (PersonID) {
+          UserID = PersonID;
+          ReColorIndividual();
+          document.getElementById("SignIn").style.display='none';
+          document.getElementById("YouGrid").style.display='';
+          if (-1==PeopleIDs.indexOf(UserID)) {
+            PeopleIDs.push(UserID);
+            PeopleNames.push(document.getElementById('name').value);
+          }
+          document.getElementById("UserName").innerHTML=PeopleNames[PeopleIDs.indexOf(UserID)]; 
+        } else {
+          alert(t.responseText);
+        }
+      }
+    });
+    return false;
+  }
+  
+  function SelectFromHere(e) {
+    timeOfSlot = Number(e.target.getAttribute("data-time"));
+    slotID = TimeOfSlot.indexOf(timeOfSlot);
+    ChangeToAvailable = (-1 == AvailableAtSlot[slotID].indexOf(UserID) );
+    IsMouseDown=true;
+
+    ToCol = Number(e.target.getAttribute("data-col"));
+    ToRow = Number(e.target.getAttribute("data-row"));
+    FromCol = ToCol;
+    FromRow = ToRow;
+    ReColorIndividual();
+  }
+
+
+  function SelectToHere(e) {
+    if (IsMouseDown) {
+      ToCol = Number(e.target.getAttribute("data-col"));
+      ToRow = Number(e.target.getAttribute("data-row"));
+      ReColorIndividual();
+    }
+  }
+
+  function SelectFromHereByTouch(event) {
+    if (event.touches.length==1) {
+//      event.preventDefault();
+ //     var touch = event.touches[0];
+ //     var elem = document.elementFromPoint(touch.clientX, touch.clientY);
+ //     var Time = Number(elem.id.replace('YouTime', ''));
+      SelectFromHere(event);
+    } else {
+      return true;
+    }
+  }
+
+  function SelectToHereByTouch(event) {
+    if (event.touches.length==1) {
+      event.preventDefault();
+      var touch = event.touches[0];
+      var elem = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (elem.hasAttribute("data-col")) {
+        ToCol = Number(elem.getAttribute("data-col"));
+        ToRow = Number(elem.getAttribute("data-row"));
+        ReColorIndividual();
+      }
+    } else {
+      return true;
+    }
+  }
+
+  function SelectStopByTouch(event) {
+    SelectStop();
+  }
+
+  function SelectStop() {
+    if (!IsMouseDown) return;
+    var TimesToToggle = new Array();
+	  var binaryAvailability = "";
+    for (var i=0;i<TimeOfSlot.length;i++) {
+      if (FromCol<ToCol) { ColA=FromCol; ColB=ToCol; } else { ColA=ToCol; ColB=FromCol; }
+      if (FromRow<ToRow) { RowA=FromRow; RowB=ToRow; } else { RowA=ToRow; RowB=FromRow; }
+      
+      var currentElement = document.getElementById("YouTime"+TimeOfSlot[i]);
+      var dataCol = Number(currentElement.getAttribute("data-col"));
+      var dataRow = Number(currentElement.getAttribute("data-row"));
+
+      var WithinX = ((ColA<=dataCol)&&(dataCol<=ColB));
+      var WithinY = ((RowA<=dataRow)&&(dataRow<=RowB));
+      
+      if (WithinX && WithinY) {
+        TimesToToggle.push(TimeOfSlot[i]);
+        if (ChangeToAvailable && (-1==AvailableAtSlot[i].indexOf(UserID)))
+          AvailableAtSlot[i].push(UserID);
+        if ((!ChangeToAvailable) && (-1!=AvailableAtSlot[i].indexOf(UserID))) {
+          SplitSpot = AvailableAtSlot[i].indexOf(UserID);
+          AvailableAtSlot[i].splice(SplitSpot,1);
+        }
+      }
+      if (-1!=AvailableAtSlot[i].indexOf(UserID)) {
+          binaryAvailability += "1";
+      } else {
+          binaryAvailability += "0";
+      }
+    }
+        
+    new Ajax.Request("SaveTimes.php", {
+      method: "post",
+      parameters: "person="+UserID
+               +"&event=8563289"
+               +"&slots="+TimesToToggle.join(",")
+               +"&availability="+binaryAvailability
+               +"&ChangeToAvailable="+ChangeToAvailable,
+      asynchronous:true,
+      onSuccess:function(t) { 
+     //   alert(t.responseText);
+      }
+    });
+    
+    IsMouseDown=false;
+    FromCol=-1; ToCol=-1; FromRow=-1; ToRow=-1;
+    ReColorIndividual();
+    ReColorGroup();
+  }
+  
+TimeOfSlot[0]=1578243600;
+AvailableAtSlot[0]=new Array();
+TimeOfSlot[1]=1578244500;
+AvailableAtSlot[1]=new Array();
+TimeOfSlot[2]=1578245400;
+AvailableAtSlot[2]=new Array();
+TimeOfSlot[3]=1578246300;
+AvailableAtSlot[3]=new Array();
+TimeOfSlot[4]=1578247200;
+AvailableAtSlot[4]=new Array();
+TimeOfSlot[5]=1578248100;
+AvailableAtSlot[5]=new Array();
+TimeOfSlot[6]=1578249000;
+AvailableAtSlot[6]=new Array();
+TimeOfSlot[7]=1578249900;
+AvailableAtSlot[7]=new Array();
+TimeOfSlot[8]=1578250800;
+AvailableAtSlot[8]=new Array();
+TimeOfSlot[9]=1578251700;
+AvailableAtSlot[9]=new Array();
+TimeOfSlot[10]=1578252600;
+AvailableAtSlot[10]=new Array();
+TimeOfSlot[11]=1578253500;
+AvailableAtSlot[11]=new Array();
+TimeOfSlot[12]=1578254400;
+AvailableAtSlot[12]=new Array();
+TimeOfSlot[13]=1578255300;
+AvailableAtSlot[13]=new Array();
+TimeOfSlot[14]=1578256200;
+AvailableAtSlot[14]=new Array();
+TimeOfSlot[15]=1578257100;
+AvailableAtSlot[15]=new Array();
+TimeOfSlot[16]=1578258000;
+AvailableAtSlot[16]=new Array();
+TimeOfSlot[17]=1578258900;
+AvailableAtSlot[17]=new Array();
+TimeOfSlot[18]=1578259800;
+AvailableAtSlot[18]=new Array();
+TimeOfSlot[19]=1578260700;
+AvailableAtSlot[19]=new Array();
+TimeOfSlot[20]=1578261600;
+AvailableAtSlot[20]=new Array();
+TimeOfSlot[21]=1578262500;
+AvailableAtSlot[21]=new Array();
+TimeOfSlot[22]=1578263400;
+AvailableAtSlot[22]=new Array();
+TimeOfSlot[23]=1578264300;
+AvailableAtSlot[23]=new Array();
+TimeOfSlot[24]=1578265200;
+AvailableAtSlot[24]=new Array();
+TimeOfSlot[25]=1578266100;
+AvailableAtSlot[25]=new Array();
+TimeOfSlot[26]=1578267000;
+AvailableAtSlot[26]=new Array();
+TimeOfSlot[27]=1578267900;
+AvailableAtSlot[27]=new Array();
+TimeOfSlot[28]=1578268800;
+AvailableAtSlot[28]=new Array();
+TimeOfSlot[29]=1578269700;
+AvailableAtSlot[29]=new Array();
+TimeOfSlot[30]=1578270600;
+AvailableAtSlot[30]=new Array();
+TimeOfSlot[31]=1578271500;
+AvailableAtSlot[31]=new Array();
+TimeOfSlot[32]=1578330000;
+AvailableAtSlot[32]=new Array();
+TimeOfSlot[33]=1578330900;
+AvailableAtSlot[33]=new Array();
+TimeOfSlot[34]=1578331800;
+AvailableAtSlot[34]=new Array();
+TimeOfSlot[35]=1578332700;
+AvailableAtSlot[35]=new Array();
+TimeOfSlot[36]=1578333600;
+AvailableAtSlot[36]=new Array();
+TimeOfSlot[37]=1578334500;
+AvailableAtSlot[37]=new Array();
+TimeOfSlot[38]=1578335400;
+AvailableAtSlot[38]=new Array();
+TimeOfSlot[39]=1578336300;
+AvailableAtSlot[39]=new Array();
+TimeOfSlot[40]=1578337200;
+AvailableAtSlot[40]=new Array();
+TimeOfSlot[41]=1578338100;
+AvailableAtSlot[41]=new Array();
+TimeOfSlot[42]=1578339000;
+AvailableAtSlot[42]=new Array();
+TimeOfSlot[43]=1578339900;
+AvailableAtSlot[43]=new Array();
+TimeOfSlot[44]=1578340800;
+AvailableAtSlot[44]=new Array();
+TimeOfSlot[45]=1578341700;
+AvailableAtSlot[45]=new Array();
+TimeOfSlot[46]=1578342600;
+AvailableAtSlot[46]=new Array();
+TimeOfSlot[47]=1578343500;
+AvailableAtSlot[47]=new Array();
+TimeOfSlot[48]=1578344400;
+AvailableAtSlot[48]=new Array();
+TimeOfSlot[49]=1578345300;
+AvailableAtSlot[49]=new Array();
+TimeOfSlot[50]=1578346200;
+AvailableAtSlot[50]=new Array();
+TimeOfSlot[51]=1578347100;
+AvailableAtSlot[51]=new Array();
+TimeOfSlot[52]=1578348000;
+AvailableAtSlot[52]=new Array();
+TimeOfSlot[53]=1578348900;
+AvailableAtSlot[53]=new Array();
+TimeOfSlot[54]=1578349800;
+AvailableAtSlot[54]=new Array();
+TimeOfSlot[55]=1578350700;
+AvailableAtSlot[55]=new Array();
+TimeOfSlot[56]=1578351600;
+AvailableAtSlot[56]=new Array();
+TimeOfSlot[57]=1578352500;
+AvailableAtSlot[57]=new Array();
+TimeOfSlot[58]=1578353400;
+AvailableAtSlot[58]=new Array();
+TimeOfSlot[59]=1578354300;
+AvailableAtSlot[59]=new Array();
+TimeOfSlot[60]=1578355200;
+AvailableAtSlot[60]=new Array();
+TimeOfSlot[61]=1578356100;
+AvailableAtSlot[61]=new Array();
+TimeOfSlot[62]=1578357000;
+AvailableAtSlot[62]=new Array();
+TimeOfSlot[63]=1578357900;
+AvailableAtSlot[63]=new Array();
+TimeOfSlot[64]=1578416400;
+AvailableAtSlot[64]=new Array();
+TimeOfSlot[65]=1578417300;
+AvailableAtSlot[65]=new Array();
+TimeOfSlot[66]=1578418200;
+AvailableAtSlot[66]=new Array();
+TimeOfSlot[67]=1578419100;
+AvailableAtSlot[67]=new Array();
+TimeOfSlot[68]=1578420000;
+AvailableAtSlot[68]=new Array();
+TimeOfSlot[69]=1578420900;
+AvailableAtSlot[69]=new Array();
+TimeOfSlot[70]=1578421800;
+AvailableAtSlot[70]=new Array();
+TimeOfSlot[71]=1578422700;
+AvailableAtSlot[71]=new Array();
+TimeOfSlot[72]=1578423600;
+AvailableAtSlot[72]=new Array();
+TimeOfSlot[73]=1578424500;
+AvailableAtSlot[73]=new Array();
+TimeOfSlot[74]=1578425400;
+AvailableAtSlot[74]=new Array();
+TimeOfSlot[75]=1578426300;
+AvailableAtSlot[75]=new Array();
+TimeOfSlot[76]=1578427200;
+AvailableAtSlot[76]=new Array();
+TimeOfSlot[77]=1578428100;
+AvailableAtSlot[77]=new Array();
+TimeOfSlot[78]=1578429000;
+AvailableAtSlot[78]=new Array();
+TimeOfSlot[79]=1578429900;
+AvailableAtSlot[79]=new Array();
+TimeOfSlot[80]=1578430800;
+AvailableAtSlot[80]=new Array();
+TimeOfSlot[81]=1578431700;
+AvailableAtSlot[81]=new Array();
+TimeOfSlot[82]=1578432600;
+AvailableAtSlot[82]=new Array();
+TimeOfSlot[83]=1578433500;
+AvailableAtSlot[83]=new Array();
+TimeOfSlot[84]=1578434400;
+AvailableAtSlot[84]=new Array();
+TimeOfSlot[85]=1578435300;
+AvailableAtSlot[85]=new Array();
+TimeOfSlot[86]=1578436200;
+AvailableAtSlot[86]=new Array();
+TimeOfSlot[87]=1578437100;
+AvailableAtSlot[87]=new Array();
+TimeOfSlot[88]=1578438000;
+AvailableAtSlot[88]=new Array();
+TimeOfSlot[89]=1578438900;
+AvailableAtSlot[89]=new Array();
+TimeOfSlot[90]=1578439800;
+AvailableAtSlot[90]=new Array();
+TimeOfSlot[91]=1578440700;
+AvailableAtSlot[91]=new Array();
+TimeOfSlot[92]=1578441600;
+AvailableAtSlot[92]=new Array();
+TimeOfSlot[93]=1578442500;
+AvailableAtSlot[93]=new Array();
+TimeOfSlot[94]=1578443400;
+AvailableAtSlot[94]=new Array();
+TimeOfSlot[95]=1578444300;
+AvailableAtSlot[95]=new Array();
+TimeOfSlot[96]=1578502800;
+AvailableAtSlot[96]=new Array();
+TimeOfSlot[97]=1578503700;
+AvailableAtSlot[97]=new Array();
+TimeOfSlot[98]=1578504600;
+AvailableAtSlot[98]=new Array();
+TimeOfSlot[99]=1578505500;
+AvailableAtSlot[99]=new Array();
+TimeOfSlot[100]=1578506400;
+AvailableAtSlot[100]=new Array();
+TimeOfSlot[101]=1578507300;
+AvailableAtSlot[101]=new Array();
+TimeOfSlot[102]=1578508200;
+AvailableAtSlot[102]=new Array();
+TimeOfSlot[103]=1578509100;
+AvailableAtSlot[103]=new Array();
+TimeOfSlot[104]=1578510000;
+AvailableAtSlot[104]=new Array();
+TimeOfSlot[105]=1578510900;
+AvailableAtSlot[105]=new Array();
+TimeOfSlot[106]=1578511800;
+AvailableAtSlot[106]=new Array();
+TimeOfSlot[107]=1578512700;
+AvailableAtSlot[107]=new Array();
+TimeOfSlot[108]=1578513600;
+AvailableAtSlot[108]=new Array();
+TimeOfSlot[109]=1578514500;
+AvailableAtSlot[109]=new Array();
+TimeOfSlot[110]=1578515400;
+AvailableAtSlot[110]=new Array();
+TimeOfSlot[111]=1578516300;
+AvailableAtSlot[111]=new Array();
+TimeOfSlot[112]=1578517200;
+AvailableAtSlot[112]=new Array();
+TimeOfSlot[113]=1578518100;
+AvailableAtSlot[113]=new Array();
+TimeOfSlot[114]=1578519000;
+AvailableAtSlot[114]=new Array();
+TimeOfSlot[115]=1578519900;
+AvailableAtSlot[115]=new Array();
+TimeOfSlot[116]=1578520800;
+AvailableAtSlot[116]=new Array();
+TimeOfSlot[117]=1578521700;
+AvailableAtSlot[117]=new Array();
+TimeOfSlot[118]=1578522600;
+AvailableAtSlot[118]=new Array();
+TimeOfSlot[119]=1578523500;
+AvailableAtSlot[119]=new Array();
+TimeOfSlot[120]=1578524400;
+AvailableAtSlot[120]=new Array();
+TimeOfSlot[121]=1578525300;
+AvailableAtSlot[121]=new Array();
+TimeOfSlot[122]=1578526200;
+AvailableAtSlot[122]=new Array();
+TimeOfSlot[123]=1578527100;
+AvailableAtSlot[123]=new Array();
+TimeOfSlot[124]=1578528000;
+AvailableAtSlot[124]=new Array();
+TimeOfSlot[125]=1578528900;
+AvailableAtSlot[125]=new Array();
+TimeOfSlot[126]=1578529800;
+AvailableAtSlot[126]=new Array();
+TimeOfSlot[127]=1578530700;
+AvailableAtSlot[127]=new Array();
+TimeOfSlot[128]=1578589200;
+AvailableAtSlot[128]=new Array();
+TimeOfSlot[129]=1578590100;
+AvailableAtSlot[129]=new Array();
+TimeOfSlot[130]=1578591000;
+AvailableAtSlot[130]=new Array();
+TimeOfSlot[131]=1578591900;
+AvailableAtSlot[131]=new Array();
+TimeOfSlot[132]=1578592800;
+AvailableAtSlot[132]=new Array();
+TimeOfSlot[133]=1578593700;
+AvailableAtSlot[133]=new Array();
+TimeOfSlot[134]=1578594600;
+AvailableAtSlot[134]=new Array();
+TimeOfSlot[135]=1578595500;
+AvailableAtSlot[135]=new Array();
+TimeOfSlot[136]=1578596400;
+AvailableAtSlot[136]=new Array();
+TimeOfSlot[137]=1578597300;
+AvailableAtSlot[137]=new Array();
+TimeOfSlot[138]=1578598200;
+AvailableAtSlot[138]=new Array();
+TimeOfSlot[139]=1578599100;
+AvailableAtSlot[139]=new Array();
+TimeOfSlot[140]=1578600000;
+AvailableAtSlot[140]=new Array();
+TimeOfSlot[141]=1578600900;
+AvailableAtSlot[141]=new Array();
+TimeOfSlot[142]=1578601800;
+AvailableAtSlot[142]=new Array();
+TimeOfSlot[143]=1578602700;
+AvailableAtSlot[143]=new Array();
+TimeOfSlot[144]=1578603600;
+AvailableAtSlot[144]=new Array();
+TimeOfSlot[145]=1578604500;
+AvailableAtSlot[145]=new Array();
+TimeOfSlot[146]=1578605400;
+AvailableAtSlot[146]=new Array();
+TimeOfSlot[147]=1578606300;
+AvailableAtSlot[147]=new Array();
+TimeOfSlot[148]=1578607200;
+AvailableAtSlot[148]=new Array();
+TimeOfSlot[149]=1578608100;
+AvailableAtSlot[149]=new Array();
+TimeOfSlot[150]=1578609000;
+AvailableAtSlot[150]=new Array();
+TimeOfSlot[151]=1578609900;
+AvailableAtSlot[151]=new Array();
+TimeOfSlot[152]=1578610800;
+AvailableAtSlot[152]=new Array();
+TimeOfSlot[153]=1578611700;
+AvailableAtSlot[153]=new Array();
+TimeOfSlot[154]=1578612600;
+AvailableAtSlot[154]=new Array();
+TimeOfSlot[155]=1578613500;
+AvailableAtSlot[155]=new Array();
+TimeOfSlot[156]=1578614400;
+AvailableAtSlot[156]=new Array();
+TimeOfSlot[157]=1578615300;
+AvailableAtSlot[157]=new Array();
+TimeOfSlot[158]=1578616200;
+AvailableAtSlot[158]=new Array();
+TimeOfSlot[159]=1578617100;
+AvailableAtSlot[159]=new Array();
+var AvailableIDs=new Array();
+</script>
+
 	<h1> Hello World! </h1>
+	<div id="YouGrid" style="">
+  	<div class="GridTitle" style="display:inline-block;*display:inline;zoom:1; margin-left:40px;">
+	<span id="UserName">a</span>'s Availability<div class="GridSubtitle">    <div style="padding:5px;" onselectstart="return true;">
+		Unavailable<div style="display:inline-block;*display:inline;zoom:1;vertical-align:middle;padding:0px 5px 0px 5px;">
+		<table width="30" height="10" cellpadding="0" cellspacing="0" style="border: solid 1px black"><tbody><tr>
+		<td bgcolor="#ffdede">&nbsp;</td></tr></tbody></table></div>
+		Available<div style="display:inline-block;*display:inline;zoom:1;vertical-align:middle;padding:0px 5px 0px 5px;">
+		<table width="30" height="10" cellpadding="0" cellspacing="0" style="border: solid 1px black"><tbody><tr>
+		<td bgcolor="#339900">&nbsp;</td></tr></tbody></table></div>
+		</div>
+		
+		Click and Drag to Toggle; Saved Immediately</div>
+	</div><br clear="all">
+	
+	
+	<div style="display:inline-block;*display:inline;zoom:1; vertical-align:bottom;text-align:right;"><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">9 AM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">10 AM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">11 AM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">Noon&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">1 PM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">2 PM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">3 PM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">4 PM&nbsp;</div></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-top: 1px;border-right: 1px white solid;"></div></div><div style="font-size:0px;vertical-align:top;"><div style="vertical-align:top;display:inline-block;*display:inline;zoom:1;width:44px;height:9px;font-size:0px;border-left: 1px white solid;margin-bottom:8px;border-right: 1px white solid;"><div style="text-align:right;width:44px;font-size:10px;margin:4px 4px 0px 0px;">5 PM&nbsp;</div></div></div></div><div style="display:inline-block;*display:inline;zoom:1;vertical-align:bottom;text-align:right;" "="">
+	
+	<div style="display:inline-block;*display:inline;zoom:1;text-align:center;font-size:10px;width:44px;padding-right:1px;">Jan  5<br><div style="display:inline-block;*display:inline;zoom:1;font-size:16px;">Sun</div></div><div style="display:inline-block;*display:inline;zoom:1;text-align:center;font-size:10px;width:44px;padding-right:1px;">Jan  6<br><div style="display:inline-block;*display:inline;zoom:1;font-size:16px;">Mon</div></div><div style="display:inline-block;*display:inline;zoom:1;text-align:center;font-size:10px;width:44px;padding-right:1px;">Jan  7<br><div style="display:inline-block;*display:inline;zoom:1;font-size:16px;">Tue</div></div><div style="display:inline-block;*display:inline;zoom:1;text-align:center;font-size:10px;width:44px;padding-right:1px;">Jan  8<br><div style="display:inline-block;*display:inline;zoom:1;font-size:16px;">Wed</div></div><div style="display:inline-block;*display:inline;zoom:1;text-align:center;font-size:10px;width:44px;padding-right:1px;">Jan  9<br><div style="display:inline-block;*display:inline;zoom:1;font-size:16px;">Thu</div></div><div id="YouGridSlots" class="GroupGrid" style="background-color:white; display:inline"><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578243600" data-col="0" data-row="0" data-time="1578243600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578330000" data-col="1" data-row="0" data-time="1578330000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578416400" data-col="2" data-row="0" data-time="1578416400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578502800" data-col="3" data-row="0" data-time="1578502800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578589200" data-col="4" data-row="0" data-time="1578589200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578244500" data-col="0" data-row="1" data-time="1578244500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578330900" data-col="1" data-row="1" data-time="1578330900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578417300" data-col="2" data-row="1" data-time="1578417300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578503700" data-col="3" data-row="1" data-time="1578503700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578590100" data-col="4" data-row="1" data-time="1578590100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578245400" data-col="0" data-row="2" data-time="1578245400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578331800" data-col="1" data-row="2" data-time="1578331800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578418200" data-col="2" data-row="2" data-time="1578418200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578504600" data-col="3" data-row="2" data-time="1578504600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578591000" data-col="4" data-row="2" data-time="1578591000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578246300" data-col="0" data-row="3" data-time="1578246300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578332700" data-col="1" data-row="3" data-time="1578332700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578419100" data-col="2" data-row="3" data-time="1578419100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578505500" data-col="3" data-row="3" data-time="1578505500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578591900" data-col="4" data-row="3" data-time="1578591900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578247200" data-col="0" data-row="4" data-time="1578247200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578333600" data-col="1" data-row="4" data-time="1578333600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578420000" data-col="2" data-row="4" data-time="1578420000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578506400" data-col="3" data-row="4" data-time="1578506400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578592800" data-col="4" data-row="4" data-time="1578592800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578248100" data-col="0" data-row="5" data-time="1578248100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578334500" data-col="1" data-row="5" data-time="1578334500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578420900" data-col="2" data-row="5" data-time="1578420900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578507300" data-col="3" data-row="5" data-time="1578507300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578593700" data-col="4" data-row="5" data-time="1578593700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578249000" data-col="0" data-row="6" data-time="1578249000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578335400" data-col="1" data-row="6" data-time="1578335400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578421800" data-col="2" data-row="6" data-time="1578421800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578508200" data-col="3" data-row="6" data-time="1578508200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578594600" data-col="4" data-row="6" data-time="1578594600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578249900" data-col="0" data-row="7" data-time="1578249900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578336300" data-col="1" data-row="7" data-time="1578336300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578422700" data-col="2" data-row="7" data-time="1578422700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578509100" data-col="3" data-row="7" data-time="1578509100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578595500" data-col="4" data-row="7" data-time="1578595500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578250800" data-col="0" data-row="8" data-time="1578250800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578337200" data-col="1" data-row="8" data-time="1578337200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578423600" data-col="2" data-row="8" data-time="1578423600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578510000" data-col="3" data-row="8" data-time="1578510000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578596400" data-col="4" data-row="8" data-time="1578596400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578251700" data-col="0" data-row="9" data-time="1578251700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578338100" data-col="1" data-row="9" data-time="1578338100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578424500" data-col="2" data-row="9" data-time="1578424500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578510900" data-col="3" data-row="9" data-time="1578510900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578597300" data-col="4" data-row="9" data-time="1578597300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578252600" data-col="0" data-row="10" data-time="1578252600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578339000" data-col="1" data-row="10" data-time="1578339000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578425400" data-col="2" data-row="10" data-time="1578425400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578511800" data-col="3" data-row="10" data-time="1578511800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578598200" data-col="4" data-row="10" data-time="1578598200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578253500" data-col="0" data-row="11" data-time="1578253500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578339900" data-col="1" data-row="11" data-time="1578339900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578426300" data-col="2" data-row="11" data-time="1578426300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578512700" data-col="3" data-row="11" data-time="1578512700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578599100" data-col="4" data-row="11" data-time="1578599100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578254400" data-col="0" data-row="12" data-time="1578254400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578340800" data-col="1" data-row="12" data-time="1578340800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578427200" data-col="2" data-row="12" data-time="1578427200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578513600" data-col="3" data-row="12" data-time="1578513600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578600000" data-col="4" data-row="12" data-time="1578600000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578255300" data-col="0" data-row="13" data-time="1578255300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578341700" data-col="1" data-row="13" data-time="1578341700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578428100" data-col="2" data-row="13" data-time="1578428100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578514500" data-col="3" data-row="13" data-time="1578514500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578600900" data-col="4" data-row="13" data-time="1578600900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578256200" data-col="0" data-row="14" data-time="1578256200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578342600" data-col="1" data-row="14" data-time="1578342600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578429000" data-col="2" data-row="14" data-time="1578429000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578515400" data-col="3" data-row="14" data-time="1578515400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578601800" data-col="4" data-row="14" data-time="1578601800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578257100" data-col="0" data-row="15" data-time="1578257100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578343500" data-col="1" data-row="15" data-time="1578343500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578429900" data-col="2" data-row="15" data-time="1578429900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578516300" data-col="3" data-row="15" data-time="1578516300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578602700" data-col="4" data-row="15" data-time="1578602700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578258000" data-col="0" data-row="16" data-time="1578258000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578344400" data-col="1" data-row="16" data-time="1578344400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578430800" data-col="2" data-row="16" data-time="1578430800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578517200" data-col="3" data-row="16" data-time="1578517200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578603600" data-col="4" data-row="16" data-time="1578603600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578258900" data-col="0" data-row="17" data-time="1578258900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578345300" data-col="1" data-row="17" data-time="1578345300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578431700" data-col="2" data-row="17" data-time="1578431700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578518100" data-col="3" data-row="17" data-time="1578518100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578604500" data-col="4" data-row="17" data-time="1578604500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578259800" data-col="0" data-row="18" data-time="1578259800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578346200" data-col="1" data-row="18" data-time="1578346200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578432600" data-col="2" data-row="18" data-time="1578432600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578519000" data-col="3" data-row="18" data-time="1578519000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578605400" data-col="4" data-row="18" data-time="1578605400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578260700" data-col="0" data-row="19" data-time="1578260700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578347100" data-col="1" data-row="19" data-time="1578347100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578433500" data-col="2" data-row="19" data-time="1578433500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578519900" data-col="3" data-row="19" data-time="1578519900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578606300" data-col="4" data-row="19" data-time="1578606300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578261600" data-col="0" data-row="20" data-time="1578261600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578348000" data-col="1" data-row="20" data-time="1578348000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578434400" data-col="2" data-row="20" data-time="1578434400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578520800" data-col="3" data-row="20" data-time="1578520800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578607200" data-col="4" data-row="20" data-time="1578607200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578262500" data-col="0" data-row="21" data-time="1578262500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578348900" data-col="1" data-row="21" data-time="1578348900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578435300" data-col="2" data-row="21" data-time="1578435300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578521700" data-col="3" data-row="21" data-time="1578521700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578608100" data-col="4" data-row="21" data-time="1578608100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578263400" data-col="0" data-row="22" data-time="1578263400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578349800" data-col="1" data-row="22" data-time="1578349800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578436200" data-col="2" data-row="22" data-time="1578436200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578522600" data-col="3" data-row="22" data-time="1578522600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578609000" data-col="4" data-row="22" data-time="1578609000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578264300" data-col="0" data-row="23" data-time="1578264300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578350700" data-col="1" data-row="23" data-time="1578350700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578437100" data-col="2" data-row="23" data-time="1578437100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578523500" data-col="3" data-row="23" data-time="1578523500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578609900" data-col="4" data-row="23" data-time="1578609900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578265200" data-col="0" data-row="24" data-time="1578265200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578351600" data-col="1" data-row="24" data-time="1578351600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578438000" data-col="2" data-row="24" data-time="1578438000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578524400" data-col="3" data-row="24" data-time="1578524400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578610800" data-col="4" data-row="24" data-time="1578610800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578266100" data-col="0" data-row="25" data-time="1578266100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578352500" data-col="1" data-row="25" data-time="1578352500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578438900" data-col="2" data-row="25" data-time="1578438900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578525300" data-col="3" data-row="25" data-time="1578525300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578611700" data-col="4" data-row="25" data-time="1578611700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578267000" data-col="0" data-row="26" data-time="1578267000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578353400" data-col="1" data-row="26" data-time="1578353400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578439800" data-col="2" data-row="26" data-time="1578439800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578526200" data-col="3" data-row="26" data-time="1578526200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578612600" data-col="4" data-row="26" data-time="1578612600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578267900" data-col="0" data-row="27" data-time="1578267900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578354300" data-col="1" data-row="27" data-time="1578354300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578440700" data-col="2" data-row="27" data-time="1578440700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578527100" data-col="3" data-row="27" data-time="1578527100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578613500" data-col="4" data-row="27" data-time="1578613500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578268800" data-col="0" data-row="28" data-time="1578268800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578355200" data-col="1" data-row="28" data-time="1578355200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578441600" data-col="2" data-row="28" data-time="1578441600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578528000" data-col="3" data-row="28" data-time="1578528000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578614400" data-col="4" data-row="28" data-time="1578614400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578269700" data-col="0" data-row="29" data-time="1578269700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578356100" data-col="1" data-row="29" data-time="1578356100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578442500" data-col="2" data-row="29" data-time="1578442500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578528900" data-col="3" data-row="29" data-time="1578528900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578615300" data-col="4" data-row="29" data-time="1578615300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578270600" data-col="0" data-row="30" data-time="1578270600" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578357000" data-col="1" data-row="30" data-time="1578357000" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578443400" data-col="2" data-row="30" data-time="1578443400" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578529800" data-col="3" data-row="30" data-time="1578529800" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578616200" data-col="4" data-row="30" data-time="1578616200" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); border-top-width: 1px; border-top-style: dotted; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div><div style="font-size:0px;vertical-align:top;"><div id="YouTime1578271500" data-col="0" data-row="31" data-time="1578271500" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); margin-bottom: 7px; border-bottom-width: 1px; border-bottom-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578357900" data-col="1" data-row="31" data-time="1578357900" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); margin-bottom: 7px; border-bottom-width: 1px; border-bottom-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578444300" data-col="2" data-row="31" data-time="1578444300" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); margin-bottom: 7px; border-bottom-width: 1px; border-bottom-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578530700" data-col="3" data-row="31" data-time="1578530700" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); margin-bottom: 7px; border-bottom-width: 1px; border-bottom-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	<div id="YouTime1578617100" data-col="4" data-row="31" data-time="1578617100" onmousedown="SelectFromHere(event);" onmouseover="SelectToHere(event);" ontouchstart="SelectFromHereByTouch(event);" ontouchmove="SelectToHereByTouch(event);" ontouchend="SelectStopByTouch(event);" style="vertical-align: top; display: inline-block; zoom: 1; width: 44px; height: 9px; font-size: 0px; border-left-width: 1px; border-left-style: solid; border-color: black; background-color: rgb(255, 222, 222); margin-bottom: 7px; border-bottom-width: 1px; border-bottom-style: solid; border-right-width: 1px; border-right-style: solid; background-position: initial initial; background-repeat: initial initial;"></div>
+	</div></div></div></div>
 	
 {% endblock %}
