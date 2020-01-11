@@ -54,15 +54,15 @@ def register(request):
 def busyInterface(request):
     DATA_TYPES = ["getFree", "setBusy"]
     try:
-        data_type = request.POST["data_type"]
+        data_type = request.GET["data_type"]
     except:
         return HttpResponseBadRequest("data_type is required")
     if data_type not in DATA_TYPES:
         return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
     if data_type == "getFree":
         try:
-            start_date = request.POST['start_date']
-            end_date = request.POST['end_date']
+            start_date = request.GET['start_date']
+            end_date = request.GET['end_date']
         except:
             return HttpResponseBadRequest("start_date and end_date required")
 
@@ -76,8 +76,8 @@ def busyInterface(request):
 
     if data_type == "setBusy":
         try:
-            start_date = request.POST['start_date']
-            available_array = request.POST['available_array']
+            start_date = request.GET['start_date']
+            available_array = request.GET['available_array']
         except:
             return HttpResponseBadRequest("start_date and available_array is required")
         try:
