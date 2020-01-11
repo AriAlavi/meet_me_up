@@ -1,6 +1,7 @@
-# Customignores
-secret_info.json
+# Custom ignores
+*/secret_info.json
 *.pem
+*/migrations/*.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

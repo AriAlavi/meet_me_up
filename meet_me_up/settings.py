@@ -29,8 +29,6 @@ except FileNotFoundError:
 
 
 
-# load_secret = (lambda x: json.load(SECRET_FILE))[x])
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -43,7 +41,7 @@ except:
     SECRET_DATA["SECRET_KEY"] = SECRET_KEY
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production! Don't tell me what to do!
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'meetmeup.xyz']

@@ -4,11 +4,18 @@ from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
 
-from main.models import Profile
+from main.models import Profile, Event
 
 def home(request):
-    context = {}
+    context = {
+    }
     return render(request, "main/home.html", context)
+
+def index(request):
+    context = {
+        'event': Event.objects.filter(creator=request.user.profile)
+    }
+    return render(request, "main/index.html", context)
 
 def profile(request):
     messages.success(request, "Logged in successfully!")
