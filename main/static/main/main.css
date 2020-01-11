@@ -5,12 +5,13 @@
 
 #box {
   padding: 30px;
-  text-align: center;
-  background: #4682B4;
+  background: palevioletred;
   color: white;
-  font-size: 20px;
+  font-size: 40px;
   border: 2px solid black;
   border-radius: 10px;
+  margin-top: 25%;
+  width: auto;
 }
 .header {
   padding: 60px;

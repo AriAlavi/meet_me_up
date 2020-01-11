@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.shortcuts import redirect
 from main.models import Profile, Event, Busy
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 def event(request, code_name):
@@ -39,7 +39,7 @@ def register(request):
             profile = Profile()
             profile.user = user
             profile.save()
-            return redirect('')
+            return redirect('/login')
         else:
             for error in form.errors.items():
                 messages.warning(request, error)
@@ -51,29 +51,51 @@ def register(request):
 
 
 @login_required
-def busy(request):
-    if request.POST:
-        DATA_TYPES = ["getFree"]
+def busyInterface(request):
+    DATA_TYPES = ["getFree", "setBusy"]
+    try:
+        data_type = request.POST["data_type"]
+    except:
+        return HttpResponseBadRequest("data_type is required")
+    if data_type not in DATA_TYPES:
+        return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
+    if data_type == "getFree":
         try:
-            data_type = request.POST["data_type"]
+            start_date = request.POST['start_date']
+            end_date = request.POST['end_date']
         except:
-            return HttpResponseBadRequest("data_type is required")
-        if data_type not in DATA_TYPES:
-            return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
-        if data_type == "getFree":
-            try:
-                start_date = request.POST['start_date']
-                end_date = request.POST['end_date']
-            except:
-                return HttpResponseBadRequest("start_date and end_date required")
+            return HttpResponseBadRequest("start_date and end_date required")
 
-            try:
-                start_date = datetime.strptime(start_date, "%m/%d/%Y")
-                end_date = datetime.strptime(end_date, "%m/%d/%Y")
-            except:
-                return HttpResponseBadRequest("Date must be in format m/d/Y")
+        try:
+            start_date = datetime.strptime(start_date, "%m/%d/%Y")
+            end_date = datetime.strptime(end_date, "%m/%d/%Y")
+        except:
+            return HttpResponseBadRequest("Date must be in format m/d/Y")
+
+        return HttpResponse(json.dumps(Busy.getFree([request.user.profile], start_date, end_date)))
+
+    if data_type == "setBusy":
+        try:
+            start_date = request.POST['start_date']
+            available_array = request.POST['available_array']
+        except:
+            return HttpResponseBadRequest("start_date and available_array is required")
+        try:
+            start_date = datetime.strptime(start_date, "%m/%d/%Y")
+        except:
+            return HttpResponseBadRequest("Date must be in format m/d/Y")
+        try:
+            available_array = json.loads(available_array)
+        except:
+            return HttpResponseBadRequest("available array must be json")
         
-            return HttpResponse(json.dumps(Busy.getFree([request.user.profile], start_date, end_date)))
+        for available in available_array:
+            if available:
+                Busy.objects.filter(start_date__gte=available).filter(end_date__lte)
+            start_date += timedelta(minutes=30)
+
+@login_required
+def busy(request):
         
     context = {
 
