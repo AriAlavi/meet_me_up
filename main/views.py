@@ -39,7 +39,7 @@ def register(request):
             profile = Profile()
             profile.user = user
             profile.save()
-            return redirect("")
+            return redirect('/login')
         else:
             for error in form.errors.items():
                 messages.warning(request, error)
