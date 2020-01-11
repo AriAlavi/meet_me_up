@@ -42,27 +42,52 @@ function combineDict(dict1, dict2){
     return newdict;
 }
 
-function getData(url, header){
+// function getData(url, header){
+//     var cacheHas = false;
+//     var attribute = ""
+//     Object.keys(header).forEach(function(key){
+//         attribute += key + header[key];
+//     })
+//     Object.keys(CACHE).forEach(function(key){
+//         if(key == attribute){
+//             return CACHE[key]; //key is a string, so could the problem be that we were indexing using a string???
+//         }
+//     })
+//     if(cacheHas){
+//         return CACHE[attribute];
+//     }
+//     var headers = {
+//         'csrftoken' : getCookie("csrftoken"), "data_type" : attribute
+//     }
+//     headers = combineDict(headers, header)
+//     return $.get(baseURL() + url, headers, function(data){
+//         var result = JSON.parse(data);
+//         CACHE[attribute] = result;
+//         return result;
+//     })
+// }
+async function getData(url, header){
     var cacheHas = false;
-    var attribute = ""
+    var hash = "";
     Object.keys(header).forEach(function(key){
-        attribute += key + header[key];
+        hash += key + header[key];
     })
-    Object.keys(CACHE).forEach(function(key){
-        if(key == attribute){
-            return CACHE[key]; //key is a string, so could the problem be that we were indexing using a string???
+    var cacheValue = CACHE[hash];
+    if(cacheValue != undefined){
+        return cacheValue;
+    }
+    var localHeaders = header;
+    localHeaders["csrftoken"] = getCookie("csrftoken");
+    var result = null;
+    var callresult = $.get(baseURL() + url, header, function(data){
+        try{
+            result = JSON.parse(data);
+        }catch{
+            result = data
         }
-    })
-    if(cacheHas){
-        return CACHE[attribute];
-    }
-    var headers = {
-        'csrftoken' : getCookie("csrftoken"), "data_type" : attribute
-    }
-    headers = combineDict(headers, header)
-    return $.get(baseURL() + url, headers, function(data){
-        var result = JSON.parse(data);
-        CACHE[attribute] = result;
+        CACHE[hash] = result;
         return result;
     })
+    return callresult;
+
 }
