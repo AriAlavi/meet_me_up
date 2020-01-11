@@ -11,16 +11,37 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import json
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+
+SECRET_FILE_PATH = os.path.join(BASE_DIR, "secret_info.json")
+try:
+    SECRET_FILE = open(SECRET_FILE_PATH, "r+")
+    SECRET_DATA = json.load(SECRET_FILE)
+except FileNotFoundError:
+    SECRET_FILE = open(SECRET_FILE_PATH, "w+")
+    SECRET_DATA = {}
+
+
+
+# load_secret = (lambda x: json.load(SECRET_FILE))[x])
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'b0oi8#3jxh0^&d3_z6cyvtgex4w0q@^!0yjz)nbx(ek=_c3&q$'
+
+try:
+    SECRET_KEY = SECRET_DATA["SECRET_KEY"]
+except:
+    SECRET_KEY = get_random_secret_key()
+    SECRET_DATA["SECRET_KEY"] = SECRET_KEY
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'main.apps.MainConfig'
 ]
 
 MIDDLEWARE = [
@@ -118,3 +140,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SECRET_FILE.close()
+SECRET_FILE = open(SECRET_FILE_PATH, "w+")
+json.dump(SECRET_DATA, SECRET_FILE)
+SECRET_FILE.close()
