@@ -8,5 +8,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name="main/logout.html"), name="logout"),
     path('register/', main_views.register, name="register"),
     path('accounts/profile/', main_views.profile, name="profile_redirect"),
-    path('index/', main_views.index, name = "index")
+    path('index/', main_views.index, name = "index"),
+    path('event/<str:code_name>/', main_views.event, name = "event")
 ]
