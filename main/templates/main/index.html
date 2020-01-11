@@ -1,0 +1,12 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+	{% for e in event %}
+        <div id='box'>
+            <h3> Title: {{E.title}} </h3>
+            <p> {{E.start_date}} - {{E.end_date}} </p>
+            <p> Code Name: {{E.code_name}}</p>
+            <p> Creator: {{E.creator}} </p>
+        </div>
+    {% endfor %}
+{% endblock %}
