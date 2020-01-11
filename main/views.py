@@ -5,6 +5,8 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.shortcuts import redirect
 
 from main.models import Profile, Event
+
+
 def event(request, code_name):
     event = Event.objects.get(code_name=code_name)
     context = {
