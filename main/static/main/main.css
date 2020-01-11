@@ -15,9 +15,17 @@
 
 body {
   margin: 0;
-  background: url("/static/back.png") no-repeat fixed;
+  background: url("/static/back.png") no-repeat center center fixed;
+    -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
 
 }
+
+  br {
+        line-height: 150%;
+     }
 
 ul.topnav {
   list-style-type: none;
