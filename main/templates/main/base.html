@@ -17,8 +17,11 @@
 <link rel="stylesheet" href="{% static 'main/main.css' %}">
 
 <ul class="topnav">
-  	<li><a class="active" href="{% url 'login' %}">Login</a></li>
-  	<li><a href="{% url 'logout' %}">Logout</a></li>
+    {% if not request.user.profile %}
+      <li><a class="active" href="{% url 'login' %}">Login</a></li>
+      {% else %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% endif %}
 	</ul>
 	
 {% if messages %}
