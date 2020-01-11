@@ -3,8 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
-
 from main.models import Profile, Event
+
 def event(request, code_name):
     event = Event.objects.get(code_name=code_name)
     context = {
@@ -35,7 +35,7 @@ def register(request):
             profile = Profile()
             profile.user = user
             profile.save()
-            return redirect('home')
+            return redirect('')
         else:
             for error in form.errors.items():
                 messages.warning(request, error)
@@ -44,3 +44,9 @@ def register(request):
         'form' : form
     }
     return render(request, "main/register.html", context)
+
+def busy(request):
+    context = {
+
+    }
+    return render(request, "main/busy.html", context)
