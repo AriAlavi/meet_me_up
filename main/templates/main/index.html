@@ -1,7 +1,7 @@
-{% extends "main/index.html" %}
+{% extends "main/base.html" %}
 
 {% block content %}
-	{% for e in event %}
+	{% for E in event %}
         <div id='box'>
             <h3> Title: {{E.title}} </h3>
             <p> {{E.start_date}} - {{E.end_date}} </p>
