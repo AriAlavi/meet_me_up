@@ -46,7 +46,7 @@ except:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'meetmeup.xyz']
 
 
 # Application definition
