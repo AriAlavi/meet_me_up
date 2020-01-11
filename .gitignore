@@ -1,3 +1,6 @@
+# Customignores
+secret_info.json
+*.pem
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
