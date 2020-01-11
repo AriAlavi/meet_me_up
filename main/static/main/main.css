@@ -13,13 +13,16 @@
   border-radius: 10px;
 }
 .header {
-  padding: 30px;
-  text-align: center;
-  background: #4682B4;
+  padding: 60px;
+  /* text-align: center; */
+  opacity: 0.70;
+  background: palevioletred;
+  width: auto;
   color: white;
-  font-size: 20px;
-  border: 2px solid black;
-  border-radius: 10px;
+  font-size: 60px;
+  border: 2px black;
+  border-radius: 15px;
+  margin-top: 25%;
 }
 
 body {
@@ -63,4 +66,24 @@ ul.topnav li.right {float: right;}
 @media screen and (max-width: 600px) {
   ul.topnav li.right, 
   ul.topnav li {float: none;}
+}
+
+#box {
+  
+}
+
+#event_title {
+
+}
+
+#dates {
+
+}
+
+#code_name {
+
+}
+
+#creator {
+
 }
