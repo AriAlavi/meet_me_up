@@ -46,7 +46,7 @@ except:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'meetmeup.xyz']
 
 
 # Application definition
@@ -140,6 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 SECRET_FILE.close()
 SECRET_FILE = open(SECRET_FILE_PATH, "w+")
