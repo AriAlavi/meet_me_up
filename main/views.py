@@ -1,9 +1,13 @@
 from django.shortcuts import render
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
-from main.models import Profile, Event
+from main.models import Profile, Event, Busy
+
+from datetime import datetime
+import json
 
 def event(request, code_name):
     event = Event.objects.get(code_name=code_name)
@@ -45,7 +49,32 @@ def register(request):
     }
     return render(request, "main/register.html", context)
 
+
+@login_required
 def busy(request):
+    if request.POST:
+        DATA_TYPES = ["getFree"]
+        try:
+            data_type = request.POST["data_type"]
+        except:
+            return HttpResponseBadRequest("data_type is required")
+        if data_type not in DATA_TYPES:
+            return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
+        if data_type == "getFree":
+            try:
+                start_date = request.POST['start_date']
+                end_date = request.POST['end_date']
+            except:
+                return HttpResponseBadRequest("start_date and end_date required")
+
+            try:
+                start_date = datetime.strptime(start_date, "%m/%d/%Y")
+                end_date = datetime.strptime(end_date, "%m/%d/%Y")
+            except:
+                return HttpResponseBadRequest("Date must be in format m/d/Y")
+        
+            return HttpResponse(json.dumps(Busy.getFree([request.user.profile], start_date, end_date)))
+        
     context = {
 
     }
