@@ -140,6 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 SECRET_FILE.close()
 SECRET_FILE = open(SECRET_FILE_PATH, "w+")
