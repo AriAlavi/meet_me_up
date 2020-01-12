@@ -124,8 +124,8 @@ function createTable(start_date, date_range, end_date, parent){
     function timeDescriptionGet(start_date, end_date){
         return formatDateDetailed(start_date) + " - " + formatDateDetailed(end_date);
     }
-    if(date_range > 14){
-        date_range = 14;
+    if(date_range > 7){
+        date_range = 7;
     }
     end_date.setDate(start_date.getDate()+date_range);
     var timearea = document.createElement("div")
