@@ -2,7 +2,7 @@ function stripDateDetails(givenDate){
     if(givenDate.getMinutes() > 45){
         givenDate.setMinutes(0);
         givenDate.setHours(givenDate.getHours() + 1);
-    }else if(givenDate.setMinutes() < 15){
+    }else if(givenDate.getMinutes() < 15){
         givenDate.setMinutes(0);
     }else{
         givenDate.setMinutes(30);
