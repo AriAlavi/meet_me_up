@@ -4,6 +4,10 @@
 <form method="post">
     {%csrf_token%}
     {{form.as_p}}
-    <button type="submit">Login</button>
+    <div class="main">
+            <div class="sub-main">
+            <button class="button-one" type="submit">Login</button>
+            </div>
+        </div>
 </form>
 {% endblock %}
