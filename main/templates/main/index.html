@@ -1,18 +1,19 @@
 {% extends "main/base.html" %}
 
 {% block content %}
-    <div class="main">
-            <div class="sub-main">
-            <button class="button-one" type="button" float: right>Add (+) </button>
-            </div>
-        </div>
+<div style="width: 100%; margin-bottom: 20px;" class="text-right">
+    <form action="{% url 'create' %}">
+        <button class="button-one" type="submit" float: right>Add Event (+)</button>
+    </form>
+</div>
 	{% for E in event %}
         <div id='box'>
-            <h3 id='event_title'> Title: {{E.title}} </h3>
-            <p id='dates'> {{E.start_date}} - {{E.end_date}} </p>
-            <p id='code_name'> Code Name: {{E.code_name}}</p>
-            <p id='creator'> Creator: {{E.creator}} </p>
-            <a href="{%url 'event' code_name=E.code_name%}" style="color:white"> Link </a>
+            <h2 id='event_title'>{{E.title}} </h2>
+            <hr>
+            <div id='dates'> {{E.start_date}} - {{E.end_date}} </div>
+            <div id='creator'> Creator: {{E.creator}} </div>
+            <div id='attendees'>Attendees: {{E.attendeesFormatted}}</div>
+            <a href="{%url 'event' code_name=E.code_name %}" style="color:white">Click for event details</a>
         </div>
     {% endfor %}
 {% endblock %}

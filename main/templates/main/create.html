@@ -1,9 +1,52 @@
 {% extends "main/base.html" %}
 
 {% block content %}
-    <form action="post">
-        {%csrf_token%}
-        {{form.as_p}}
-        <button type="submit"> Create Event </button>
-    </form>
+<!-- flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<form method="post">
+    <div class="form-group">
+        {% csrf_token %}
+        <label for="event_name">Event name *</label>
+        <input class="form-control" type="text" id="event_name" name="event_name" />
+    </div>
+    <div class="form-group">
+        <label for="event_url">Event url</label>
+        <input class="form-control" type="text" id="event_url" name="event_url" />
+    </div>
+    <div class="form-group">
+        <label for="start_date">Start range *</label>
+        <input class="start_date form-control" id="start_date" name="start_date" />
+    </div>
+    <div class="form-group">
+        <label for="end_date">End range *</label>
+        <input class="end_date form-control" id="end_date" name="end_date" />
+    </div>
+
+    <button class="submit" type="submit"> Create Event </button>
+</form>
+
+<script>
+$(".start_date").flatpickr({
+    "minDate" : "today",
+    "enableTime" : true,
+    "dateFormat" : "m/d/Y H:i:S",
+    "defaultHour" : 0
+});
+$(".end_date").flatpickr({
+    "minDate" : "today",
+    "enableTime" : true,
+    "dateFormat" : "m/d/Y H:i:S",
+    "defaultHour" : 0
+});
+// $(".submit").click(function(){
+//     var header = {"start_date" : $(".start_date").val(), "end_date" : $(".end_date").val(), "event_name" : $(".event_name").val(), "event_url" : $(".event_url").val(),
+//                     "csrfmiddlewaretoken" : getCookie("csrftoken")}
+//     var callresult = $.post("{% url 'create' %}", header, function(data){
+//         console.log(data)
+//         // eval(data)
+// })
+// })
+</script>
 {% endblock %}
