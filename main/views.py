@@ -5,7 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
 from main.models import Profile, Event, Free
-
+from main.forms import *
 from datetime import datetime, timedelta
 import json
 
@@ -159,7 +159,11 @@ def free(request):
 
 @login_required
 def create(request):
+    form = EventForm(request.POST or None)
+    if request.POST and form.is_valid():
+        event = form.save()
+        return redirect("event", kwargs={code_name: event.code_name})
     context = {
-
+        "form": form
     }
     return render(request, "main/create.html", context)
