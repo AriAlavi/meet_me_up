@@ -9,6 +9,12 @@ function stripDateDetails(givenDate){
     }
     givenDate.setSeconds(0)
 }
+function datetimeToDate(givenDateTime){
+    givenDateTime.setSeconds(0);
+    givenDateTime.setMinutes(0);
+    givenDateTime.setHours(0)
+    return givenDateTime
+}
 CACHE = {}
 
 function dateToPython(givenDate){
@@ -16,6 +22,40 @@ function dateToPython(givenDate){
     var d = givenDate.getDate();
     var y = givenDate.getFullYear();
     return m + "/" + d + "/" + y;
+}
+
+function formatDate(givenDate){
+    const MONTHS_ABV = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const DAY_ABV = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    var m = MONTHS_ABV[givenDate.getMonth()];
+    var d = givenDate.getDate();
+    var day = DAY_ABV[givenDate.getDay()];
+    return day + " " + d;
+
+}
+
+function formatTime(givenTime){
+    var minutes = String(givenTime.getMinutes());
+    if(minutes.length == 1){
+        minutes += "0"
+    }
+    var ending = "am";
+    var hours = givenTime.getHours();
+    if(hours == 0 && minutes == "00"){
+        return "midnight"
+    }
+    else if(hours == 12){
+        ending = "pm";
+    }
+    else if(hours == 0){
+        hours = 12;
+    }
+    else if(hours > 12){
+        ending = "pm"
+        hours -= 12;
+    }
+    return String(hours) + ":" +minutes +" " + ending;
+
 }
 
 function baseURL(){
@@ -62,7 +102,7 @@ async function getData(url, header){
         return cacheValue;
     }
     var localHeaders = header;
-    localHeaders["csrftoken"] = getCookie("csrftoken");
+    localHeaders["csrfmiddlewaretoken"] = getCookie("csrftoken");
     var result = null;
     var callresult = $.get(baseURL() + url, header, function(data){
         CACHE[hash] = data;

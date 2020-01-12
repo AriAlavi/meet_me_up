@@ -65,6 +65,17 @@ ul.topnav li.right {float: right;}
   width: auto;
 }
 
+#box2 {
+  padding: 20px;
+  background: palevioletred;
+  color: white;
+  font-size: 15px;
+  border: 2px solid black;
+  border-radius: 10px;
+  margin-top: 5%;
+  width: auto;
+}
+
 #event_title {
 
 }
@@ -83,14 +94,12 @@ ul.topnav li.right {float: right;}
 
 #register {
 
-  margin-top: 9%;
-  margin-left: 20%;
+  margin-top: 2%;
+  margin-left: 2%;
 
 }
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,400italic,600,600italic,700italic);
-
-*{margin: 0px; padding: 0px}
 
 
 h1, button{
