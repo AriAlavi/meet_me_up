@@ -49,30 +49,8 @@ function combineDict(dict1, dict2){
     return newdict;
 }
 
-// function getData(url, header){
-//     var cacheHas = false;
-//     var attribute = ""
-//     Object.keys(header).forEach(function(key){
-//         attribute += key + header[key];
-//     })
-//     Object.keys(CACHE).forEach(function(key){
-//         if(key == attribute){
-//             return CACHE[key]; //key is a string, so could the problem be that we were indexing using a string???
-//         }
-//     })
-//     if(cacheHas){
-//         return CACHE[attribute];
-//     }
-//     var headers = {
-//         'csrftoken' : getCookie("csrftoken"), "data_type" : attribute
-//     }
-//     headers = combineDict(headers, header)
-//     return $.get(baseURL() + url, headers, function(data){
-//         var result = JSON.parse(data);
-//         CACHE[attribute] = result;
-//         return result;
-//     })
-// }
+// Example call: getData("freeInterface", {"data_type" : "getFree", "start_date" : s, "end_date" : e}).then(function(e){console.log(e)})
+
 async function getData(url, header){
     var cacheHas = false;
     var hash = "";
