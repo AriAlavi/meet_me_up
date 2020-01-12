@@ -8,7 +8,7 @@ As a group, we were frustrated with the limitations of group planners that are a
 Meet Me Up allows you to create and manage events with others through our website, http://www.meetmeup.xyz/
 Once you register and log in, you can create and manage events that you are invited to, finding the most optimal times to meet for everyone!
 
-## How I built it
+## How We built it
 Using basic HTML and CSS to create our website with a Django/JQuery backend, we are able to dynamically manage web pages for our users.
 
 ## Challenges We ran into
@@ -22,5 +22,5 @@ We are especially proud of our backend software as it was the most difficult com
 
 ## What I learned
 With this project, we got to learn about in-house login authentication, creating dynamic components using Django, and managing user event information.
-## What's next for meet_me_up
+## What's next for Meet Me Up
 In the future, Meet Me Up hopes to improve our MVP to be mobile-compatible and improve the UI of our project to allow for easier usage for users. We also hope to spread our product to compete against the current preferred group planning tools.
