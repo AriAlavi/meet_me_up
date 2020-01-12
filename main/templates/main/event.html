@@ -1,8 +1,50 @@
 {% extends "main/base.html" %}
 
 {% block content %}
+{% if request.user.profile not in event.attendees %}
   <div>
-    <button> <a href="{%url 'main/login.html'}">Join </a> </button>
+    <button class="button-one join">Join</button>
   </div>
+<script>
+$(".join").click(function(){
+  var header = {
+    "csrfmiddlewaretoken" : getCookie("csrftoken"), "data_type" : "joinEvent","event_url" : "{{event.code_name}}"
+  }
+  var callresult = $.post("{% url 'freeInterface' %}", header, function(){
+    location.reload();
+  })
+})
+</script>
+{% else %}
+<h2 style="width: 100%" align="center">{{event.title}}</h2>
+<div id="optimal">
+  <h4>Optimal Times:</h4>
+  {% for time in event.getOptimalTimes %}
+    <span id="optimalTime">{{time.0}} - {{time.1}}</span>
+  {% endfor %}
+</div>
+<div class="eventHolder">
+
+</div>
+<script>
+function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
+    getData("freeInterface", {"data_type" : "getFree", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
+        data = JSON.parse(data)
+        $(".hour").removeClass("selected");
+        for(let i = 0; i < data.length; i++){
+            if(data[i] == 1){
+                $("#" + String(i) + ".hour").addClass("selected");
+            }
+        }
+    })
+}
+
+let SELECTED_DATE = new Date("{{event.start_date_js}}");
+let END_DATE = new Date("{{event.end_date_js}}");
+var date_difference = Math.ceil(dateDifference(END_DATE, SELECTED_DATE));
+createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0]);
+loadDataIntoTable();
+</script>
+{% endif %}
 	
 {% endblock %}
