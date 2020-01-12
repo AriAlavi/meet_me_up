@@ -140,3 +140,10 @@ def busy(request):
 
     }
     return render(request, "main/busy.html", context)
+
+@login_required
+def create(request):
+    context = {
+
+    }
+    return render(request, "main/create.html", content)
