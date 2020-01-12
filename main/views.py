@@ -23,7 +23,7 @@ def home(request):
 
 def index(request):
     context = {
-        'event': Event.objects.filter(creator=request.user.profile)
+        'event': request.user.profile.events.all()
     }
     return render(request, "main/index.html", context)
 
