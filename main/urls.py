@@ -11,5 +11,6 @@ urlpatterns = [
     path('index/', main_views.index, name = "index"),
     path('event/<str:code_name>/', main_views.event, name = "event"),
     path('free/', main_views.busy, name = "busy"),
-    path('freeInterface/', main_views.freeInterface, name="freeInterface")
+    path('freeInterface/', main_views.freeInterface, name="freeInterface"),
+    path('create/', main_views.create, name="create")
 ]

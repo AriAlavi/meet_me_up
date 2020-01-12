@@ -44,7 +44,7 @@ except:
 # SECURITY WARNING: don't run with debug turned on in production! Don't tell me what to do!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'www.meetmeup.xyz']
+ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'www.meetmeup.xyz', 'www.googel.website',]
 
 
 # Application definition

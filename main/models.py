@@ -7,6 +7,7 @@ import pytz
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    events = models.ManyToManyField("main.Event", blank=True)
 
     
     def getFreeInterval(self, start_date, end_date):
@@ -46,6 +47,7 @@ class Event(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
+
     def __str__(self):
         return self.title + " at " + str(self.start_date) + " to " + str(self.end_date) + " created by " + str(self.creator)
 
