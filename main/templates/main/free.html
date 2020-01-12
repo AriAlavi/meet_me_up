@@ -9,6 +9,12 @@
     background-color: gray;
     border: solid .5px  black;
 }
+.hour:nth-child(odd){
+    border-bottom: solid 1px black;
+}
+.hour:nth-child(even){
+    border-bottom: dotted .5px gray;
+}
 .column{
     display: inline-block;
     overflow: hidden;
@@ -36,7 +42,7 @@ div{
 <script>
 function createTable(start_date=SELECTED_DATE, date_range=14, end_date=END_DATE){
     end_date.setDate(end_date.getDate()+date_range);
-    
+    $(".eventHolder")[0].setAttribute("style", "min-width:" + 100 * date_range + "px;")
     function createCol(id){
         let colHolder = document.createElement("div");
         colHolder.setAttribute("class", "column")
@@ -58,13 +64,16 @@ function createTable(start_date=SELECTED_DATE, date_range=14, end_date=END_DATE)
     }
     function createTimeLabel(time){
         var label = document.createElement("div");
-        label.innerText = formatTime(time);
+        if(time.getMinutes() == 0){
+            label.innerText = formatTime(time);
+        }
+        
         label.setAttribute("class", "timelabel");
         return label;
     }
     function staticTimeColumn(){
         var col = createCol(-1)
-        col.setAttribute("style", "max-width: 80px; margin-bottom: 4px;")
+        col.setAttribute("style", "max-width: 80px; margin-bottom: 9px;")
         var time = datetimeToDate(new Date());
         for(var hour = 0; hour < 48; hour++){
             var timelabel = createTimeLabel(time);

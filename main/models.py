@@ -70,6 +70,18 @@ class Event(models.Model):
     end_date = models.DateTimeField()
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
+    def attendeesFormatted(self):
+        attending = self.attendees
+        if attending.count() == 0:
+            return ""
+        if attending.count() == 1:
+            return attending.first()
+        return ", ".join(attending)
+
+    @property
+    def attendees(self):
+        return self.profile_set.all()
+
     #numbers
     def getOverlapHeatMap(self):
         super_arr = []
@@ -85,6 +97,7 @@ class Event(models.Model):
             arr = x.getFreeArray(event_start_date,event_end_date)
             super_arr.append(arr)
         #create empty array to add everything in
+    
         for i in range(len(super_arr[0])):
             final_arr.append(0)
         #add all the arrays together
@@ -122,7 +135,8 @@ class Event(models.Model):
             final_arr.append(arr)
         return final_arr
 
-
+    class Meta:
+        ordering = ("-start_date", "-end_date")
 
     def __str__(self):
         return self.title + " at " + str(self.start_date) + " to " + str(self.end_date) + " created by " + str(self.creator)
