@@ -25,6 +25,9 @@
 .hour.selected{
     background-color: green;
 }
+div{
+    user-select: none;
+}
 </style>
 <h2 style="width: 100%" align="center">Free Times</h2>
 <div class="eventHolder">
@@ -54,7 +57,6 @@ function createTable(start_date=SELECTED_DATE, date_range=14, end_date=END_DATE)
         return label;
     }
     function createTimeLabel(time){
-        console.log("TIME", time)
         var label = document.createElement("div");
         label.innerText = formatTime(time);
         label.setAttribute("class", "timelabel");
@@ -89,9 +91,6 @@ function createTable(start_date=SELECTED_DATE, date_range=14, end_date=END_DATE)
     }
 }
 function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
-    // start_date = new Date(+start_date)
-    // start_date.setDate(start_date.getDate() + 1)
-    console.log("START", start_date)
     getData("freeInterface", {"data_type" : "getFree", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
         data = JSON.parse(data)
         $(".hour").removeClass("selected");
@@ -100,7 +99,6 @@ function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
                 $("#" + String(i) + ".hour").addClass("selected");
             }
         }
-        console.log(data)
     })
 }
 let SELECTED_DATE = datetimeToDate(new Date());
@@ -108,5 +106,68 @@ let END_DATE = new Date();
 createTable(SELECTED_DATE);
 loadDataIntoTable();
 
+// $(".eventHolder").on("click", function(start){
+
+//     $(".eventHolder").on("mousemove", function(movement){
+//         console.log("MOVE", movement)
+//     })
+// })
+
+let DRAGGING = false;
+$(".eventHolder").mousedown(function(data){
+    DRAGGING = data;
+})
+
+function massSelection(startx, endx, starty, endy, elementQuery){
+    if(startx > endx){
+        var temp = startx;
+        startx = endx;
+        endx = temp;
+        
+    }
+    if(starty > endy){
+        var temp = starty;
+        starty = endy;
+        endy = temp;
+    }
+    var selected = []
+    for(var elem of $(elementQuery)){
+        let x = $(elem).position().left;
+        let y = $(elem).position().top;
+        if(startx <= x && x <= endx && starty <= y && y <= endy){
+            selected.push(elem);
+        }
+
+    }
+    return selected;
+
+}
+
+$("*").mouseup(function(endpos){
+    if(DRAGGING){
+        let startpos = DRAGGING;
+        DRAGGING = false;
+        console.log("START DRAG", startpos.originalEvent)
+        console.log("END DRAG", endpos)
+        var startelem = startpos.target;
+        var endelem = endpos.target;
+        var startx = $(startelem).position().left;
+        var starty = $(startelem).position().top;
+        var endx = $(endelem).position().left;
+        var endy = $(endelem).position().top;
+        var elems =  massSelection(startx, endx, starty, endy, ".hour");
+        var removeClass = $(startelem).hasClass("selected");
+        for(let elem in elems){
+            elem = elems[elem];
+            console.log(elem)
+            if(removeClass){
+                $(elem).removeClass("selected")
+            }else{
+                $(elem).addClass("selected")
+            }
+            
+        }
+    }
+})
 </script>
 {% endblock %}
