@@ -146,4 +146,4 @@ def create(request):
     context = {
 
     }
-    return render(request, "main/create.html", content)
+    return render(request, "main/create.html", context)
