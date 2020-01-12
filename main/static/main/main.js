@@ -131,24 +131,24 @@ function createTable(start_date, date_range, end_date, parent, isEvent){
     var timearea = document.createElement("div")
     timearea.setAttribute("style", "width: 100%; padding: 2px 6px 2px 6px;")
     
-    if(date_range == 7 && (! isEvent)){
-        var backarrow = document.createElement("span");
-        backarrow.id = "backarrow";
-        backarrow.className = "arrow";
-        backarrow.innerText = "←";
-        timearea.appendChild(backarrow);
-    }
+    // if(date_range == 7 && (! isEvent)){
+    //     var backarrow = document.createElement("span");
+    //     backarrow.id = "backarrow";
+    //     backarrow.className = "arrow";
+    //     backarrow.innerText = "←";
+    //     timearea.appendChild(backarrow);
+    // }
     var timedescription = document.createElement("span");
     timedescription.id = "timedescription";
     timedescription.innerText = timeDescriptionGet(start_date, end_date);
     timearea.appendChild(timedescription);
-    if(date_range == 7 && (! isEvent)){
-        var frontarrow = document.createElement("span");
-        frontarrow.id = "frontarrow";
-        frontarrow.innerText = "→";
-        frontarrow.className = "arrow";
-        timearea.appendChild(frontarrow);
-    }
+    // if(date_range == 7 && (! isEvent)){
+    //     var frontarrow = document.createElement("span");
+    //     frontarrow.id = "frontarrow";
+    //     frontarrow.innerText = "→";
+    //     frontarrow.className = "arrow";
+    //     timearea.appendChild(frontarrow);
+    // }
 
 
 
