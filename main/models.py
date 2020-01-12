@@ -180,6 +180,8 @@ class Event(models.Model):
             for time in Free.timeGenerator(self.start_date, self.end_date, timedelta(minutes=30)):
                 peopleFree = len(profilesArray[i])
                 if(peopleFree >= consecutivePeople):
+                    if freeLength == 0:
+                        startFree = time
                     if freeLength >= self.length:
                         bestTimes.append((startFree, time))
                         startFree += timedelta(minutes=30)
@@ -187,7 +189,6 @@ class Event(models.Model):
                         freeLength += .5
                 else:
                     freeLength = 0
-                    startFree = time
                 i += 1
             return bestTimes
 
