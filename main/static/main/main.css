@@ -66,12 +66,12 @@ ul.topnav li.right {float: right;}
 }
 
 #box2 {
-  padding: 15px;
+  padding: 5px;
   background: palevioletred;
   color: white;
   font-size: 15px;
   border: 2px solid black;
-  border-radius: 10px;
+  border-radius: 5px;
   margin-top: 5%;
   width: auto;
 }
