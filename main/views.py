@@ -60,7 +60,18 @@ def freeInterface(request):
         return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
     
     if data_type == "getFree":
-        return HttpResponse("aright")
+        try:
+            start_date = request.GET['start_date']
+            end_date = request.GET['end_date']
+        except:
+            return HttpResponseBadRequest("start_date and end_date variables required")
+        try:
+            start_date = datetime.strptime(start_date, "%m/%d/%Y")
+            end_date = datetime.strptime(end_date, "%m/%d/%Y")
+        except:
+            return HttpResponseBadRequest("dates must be in m/d/Y form")
+
+        return HttpResponse(json.dumps(request.user.profile.getFreeArray(start_date, end_date)))
 
 # @login_required
 # def busyInterface(request):

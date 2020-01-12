@@ -11,6 +11,13 @@ function stripDateDetails(givenDate){
 }
 CACHE = {}
 
+function dateToPython(givenDate){
+    var m = givenDate.getMonth() + 1;
+    var d = givenDate.getDate();
+    var y = givenDate.getFullYear();
+    return m + "/" + d + "/" + y;
+}
+
 function baseURL(){
     var getUrl = window.location;
     return getUrl .protocol + "//" + getUrl.host + "/" ;
@@ -80,13 +87,8 @@ async function getData(url, header){
     localHeaders["csrftoken"] = getCookie("csrftoken");
     var result = null;
     var callresult = $.get(baseURL() + url, header, function(data){
-        try{
-            result = JSON.parse(data);
-        }catch{
-            result = data
-        }
-        CACHE[hash] = result;
-        return result;
+        CACHE[hash] = data;
+        return data;
     })
     return callresult;
 
