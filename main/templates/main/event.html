@@ -27,10 +27,9 @@ $(".join").click(function(){
 
 </div>
 <script>
-function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
+function loadDataIntoTable(start_date, end_date){
     getData("freeInterface", {"data_type" : "getEventHeatmap", "event" : "{{event.code_name}}"}).then(function(data){
         data = JSON.parse(data)
-        console.log(data)
         $(".hour").removeClass("selected");
         var max = 0;
         for(let i = 0; i < data.length; i ++){
@@ -50,11 +49,13 @@ function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
     })
 }
 
+
+
 let SELECTED_DATE = new Date("{{event.start_date_js}}");
 let END_DATE = new Date("{{event.end_date_js}}");
 var date_difference = Math.ceil(dateDifference(END_DATE, SELECTED_DATE));
-createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0]);
-loadDataIntoTable();
+createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0], true);
+loadDataIntoTable(SELECTED_DATE, END_DATE);
 </script>
 {% endif %}
 	

@@ -120,7 +120,7 @@ function dateDifference(date1, date2){
     return (date1 - date2) / 86400000
 }
 
-function createTable(start_date, date_range, end_date, parent){
+function createTable(start_date, date_range, end_date, parent, isEvent){
     function timeDescriptionGet(start_date, end_date){
         return formatDateDetailed(start_date) + " - " + formatDateDetailed(end_date);
     }
@@ -129,21 +129,29 @@ function createTable(start_date, date_range, end_date, parent){
     }
     end_date.setDate(start_date.getDate()+date_range);
     var timearea = document.createElement("div")
-    timearea.setAttribute("style", "width: 100%")
-    var backarrow = document.createElement("span");
-    backarrow.id = "backarrow";
-    backarrow.className = "arrow";
-    backarrow.innerText = "←";
-    var frontarrow = document.createElement("span");
-    frontarrow.id = "frontarrow";
-    frontarrow.innerText = "→";
-    frontarrow.className = "arrow";
+    timearea.setAttribute("style", "width: 100%; padding: 2px 6px 2px 6px;")
+    
+    if(date_range == 7 && (! isEvent)){
+        var backarrow = document.createElement("span");
+        backarrow.id = "backarrow";
+        backarrow.className = "arrow";
+        backarrow.innerText = "←";
+        timearea.appendChild(backarrow);
+    }
     var timedescription = document.createElement("span");
     timedescription.id = "timedescription";
     timedescription.innerText = timeDescriptionGet(start_date, end_date);
-    timearea.appendChild(backarrow);
     timearea.appendChild(timedescription);
-    timearea.appendChild(frontarrow);
+    if(date_range == 7 && (! isEvent)){
+        var frontarrow = document.createElement("span");
+        frontarrow.id = "frontarrow";
+        frontarrow.innerText = "→";
+        frontarrow.className = "arrow";
+        timearea.appendChild(frontarrow);
+    }
+
+
+
     parent.appendChild(timearea);
     parent.setAttribute("style", "min-width:" + 100 * date_range + "px;")
     function createCol(id){

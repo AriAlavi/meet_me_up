@@ -20,7 +20,7 @@ function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
 }
 let SELECTED_DATE = datetimeToDate(new Date());
 let END_DATE = new Date();
-createTable(SELECTED_DATE, 7, END_DATE, $(".eventHolder")[0]);
+createTable(SELECTED_DATE, 7, END_DATE, $(".eventHolder")[0]), false;
 loadDataIntoTable();
 
 
@@ -76,6 +76,23 @@ function postFreedom(freeArray){
     var callresult = $.post("{% url 'freeInterface' %}", header, function(data){
 })
 }
+
+$('body').on('click', '#backarrow', function() {
+    SELECTED_DATE.setDate(SELECTED_DATE.getDate()-1)
+    for(var elem of $(".eventHolder").children().toArray()){
+      elem.remove()
+    }
+    createTable(SELECTED_DATE, 7, END_DATE, $(".eventHolder")[0], false);
+    loadDataIntoTable(SELECTED_DATE, END_DATE);
+});
+$('body').on('click', '#frontarrow', function() {
+    SELECTED_DATE.setDate(SELECTED_DATE.getDate()+1)
+    for(var elem of $(".eventHolder").children().toArray()){
+      elem.remove()
+    }
+    createTable(SELECTED_DATE, 7, END_DATE, $(".eventHolder")[0]), false;
+    loadDataIntoTable(SELECTED_DATE, END_DATE);
+});
 
 $("*").mouseup(function(endpos){
     if(DRAGGING){
