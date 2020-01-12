@@ -10,7 +10,7 @@ urlpatterns = [
     path('accounts/profile/', main_views.profile, name="profile_redirect"),
     path('index/', main_views.index, name = "index"),
     path('event/<str:code_name>/', main_views.event, name = "event"),
-    path('free/', main_views.busy, name = "busy"),
+    path('free/', main_views.free, name = "free"),
     path('freeInterface/', main_views.freeInterface, name="freeInterface"),
     path('create/', main_views.create, name="create")
 ]

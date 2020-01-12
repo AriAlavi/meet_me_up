@@ -150,12 +150,12 @@ def freeInterface(request):
         return HttpResponseBadRequest("{} is not declared in the interface".format(data_type))    
 
 @login_required
-def busy(request):
+def free(request):
         
     context = {
 
     }
-    return render(request, "main/busy.html", context)
+    return render(request, "main/free.html", context)
 
 @login_required
 def create(request):

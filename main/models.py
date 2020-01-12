@@ -85,6 +85,7 @@ class Event(models.Model):
             arr = x.getFreeArray(event_start_date,event_end_date)
             super_arr.append(arr)
         #create empty array to add everything in
+    
         for i in range(len(super_arr[0])):
             final_arr.append(0)
         #add all the arrays together
