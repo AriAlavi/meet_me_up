@@ -90,48 +90,7 @@ def freeInterface(request):
         else:
             raise Exception("Logic error")
 
-    return HttpResponseBadRequest("{} is not declared in the interface".format(data_type))
-    
-
-# @login_required
-# def busyInterface(request):
-#     DATA_TYPES = ["getFree", "setBusy"]
-
-
-#     if data_type == "getFree":
-#         try:
-#             start_date = request.GET['start_date']
-#             end_date = request.GET['end_date']
-#         except:
-#             return HttpResponseBadRequest("start_date and end_date required")
-
-#         try:
-#             start_date = datetime.strptime(start_date, "%m/%d/%Y")
-#             end_date = datetime.strptime(end_date, "%m/%d/%Y")
-#         except:
-#             return HttpResponseBadRequest("Date must be in format m/d/Y")
-
-#         return HttpResponse(json.dumps(Busy.getFree([request.user.profile], start_date, end_date)))
-
-#     if data_type == "setBusy":
-#         try:
-#             start_date = request.GET['start_date']
-#             available_array = request.GET['available_array']
-#         except:
-#             return HttpResponseBadRequest("start_date and available_array is required")
-#         try:
-#             start_date = datetime.strptime(start_date, "%m/%d/%Y")
-#         except:
-#             return HttpResponseBadRequest("Date must be in format m/d/Y")
-#         try:
-#             available_array = json.loads(available_array)
-#         except:
-#             return HttpResponseBadRequest("available array must be json")
-        
-#         for available in available_array:
-#             if available:
-#                 Busy.objects.filter(start_date__gte=available).filter(end_date__lte)
-#             start_date += timedelta(minutes=30)
+    return HttpResponseBadRequest("{} is not declared in the interface".format(data_type))    
 
 @login_required
 def busy(request):
