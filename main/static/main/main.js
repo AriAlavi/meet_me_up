@@ -102,7 +102,7 @@ async function getData(url, header){
         return cacheValue;
     }
     var localHeaders = header;
-    localHeaders["csrftoken"] = getCookie("csrftoken");
+    localHeaders["csrfmiddlewaretoken"] = getCookie("csrftoken");
     var result = null;
     var callresult = $.get(baseURL() + url, header, function(data){
         CACHE[hash] = data;

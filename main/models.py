@@ -24,12 +24,12 @@ class Profile(models.Model):
         freeArray = []
         for x in Free.timeGenerator(Free.makeTimezoneAware(start_date), Free.makeTimezoneAware(end_date), interval):
             freeArray.append(0)
-        print("ARRAY LENGTH:", len(freeArray))
+        # print("ARRAY LENGTH:", len(freeArray))
         def calculateIndex(start_date, interval, calculateDate):
             assert isinstance(start_date, datetime)
             assert isinstance(interval, timedelta)
             assert isinstance(calculateDate, datetime)
-            print("CALC INDEX:", start_date, ", ", calculateDate, ", ", floor((calculateDate-start_date)/interval))
+            # print("CALC INDEX:", start_date, ", ", calculateDate, ", ", floor((calculateDate-start_date)/interval))
             return floor((calculateDate-start_date)/interval)
 
         for freeObject in self.getFreeInterval(start_date, end_date):

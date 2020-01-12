@@ -40,7 +40,7 @@ function createTable(start_date=SELECTED_DATE, date_range=14, end_date=END_DATE)
     function createCol(id){
         let colHolder = document.createElement("div");
         colHolder.setAttribute("class", "column")
-        colHolder.setAttribute("style", "width: " + String(100/(date_range + 1)) + "%");
+        colHolder.setAttribute("style", "min-width: " + String(100/(date_range + 1)) + "%");
         colHolder.id = id;
         return colHolder;
     }
@@ -106,12 +106,6 @@ let END_DATE = new Date();
 createTable(SELECTED_DATE);
 loadDataIntoTable();
 
-// $(".eventHolder").on("click", function(start){
-
-//     $(".eventHolder").on("mousemove", function(movement){
-//         console.log("MOVE", movement)
-//     })
-// })
 
 let DRAGGING = false;
 $(".eventHolder").mousedown(function(data){
@@ -143,12 +137,34 @@ function massSelection(startx, endx, starty, endy, elementQuery){
 
 }
 
+function getFreeArray(){
+    var hours = $("div.hour").toArray()
+    var results = []
+    for(let i = 0; i < hours.length; i++){
+        var elem = hours[i];
+        if($(elem).hasClass("selected")){
+            results.push(1);
+        }else{
+            results.push(0);
+        }
+    }
+    return results;
+}
+
+function postFreedom(freeArray){
+    header = {
+        "data_type": "setFree",
+        "csrfmiddlewaretoken" : getCookie("csrftoken"), "start_date" : dateToPython(SELECTED_DATE), "end_date" : dateToPython(END_DATE), "free_array" : JSON.stringify(freeArray) 
+    }
+    console.log("headers", header)
+    var callresult = $.post("{% url 'freeInterface' %}", header, function(data){
+})
+}
+
 $("*").mouseup(function(endpos){
     if(DRAGGING){
         let startpos = DRAGGING;
         DRAGGING = false;
-        console.log("START DRAG", startpos.originalEvent)
-        console.log("END DRAG", endpos)
         var startelem = startpos.target;
         var endelem = endpos.target;
         var startx = $(startelem).position().left;
@@ -159,7 +175,6 @@ $("*").mouseup(function(endpos){
         var removeClass = $(startelem).hasClass("selected");
         for(let elem in elems){
             elem = elems[elem];
-            console.log(elem)
             if(removeClass){
                 $(elem).removeClass("selected")
             }else{
@@ -167,7 +182,9 @@ $("*").mouseup(function(endpos){
             }
             
         }
+        postFreedom(getFreeArray());
     }
 })
+
 </script>
 {% endblock %}
