@@ -71,7 +71,7 @@ ul.topnav li.right {float: right;}
   color: white;
   font-size: 15px;
   border: 2px solid black;
-  border-radius: 2px;
+  border-radius: 10px;
   margin-top: 5%;
   width: auto;
 }
