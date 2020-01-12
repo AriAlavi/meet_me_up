@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
-from main.models import Profile, Event, Busy
+from main.models import Profile, Event
 
 from datetime import datetime, timedelta
 import json
@@ -49,50 +49,58 @@ def register(request):
     }
     return render(request, "main/register.html", context)
 
-
 @login_required
-def busyInterface(request):
-    DATA_TYPES = ["getFree", "setBusy"]
+def freeInterface(request):
+    DATA_TYPES = ["getFree", "setFree"]
     try:
         data_type = request.GET["data_type"]
     except:
         return HttpResponseBadRequest("data_type is required")
     if data_type not in DATA_TYPES:
         return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
+    
     if data_type == "getFree":
-        try:
-            start_date = request.GET['start_date']
-            end_date = request.GET['end_date']
-        except:
-            return HttpResponseBadRequest("start_date and end_date required")
+        return HttpResponse("aright")
 
-        try:
-            start_date = datetime.strptime(start_date, "%m/%d/%Y")
-            end_date = datetime.strptime(end_date, "%m/%d/%Y")
-        except:
-            return HttpResponseBadRequest("Date must be in format m/d/Y")
+# @login_required
+# def busyInterface(request):
+#     DATA_TYPES = ["getFree", "setBusy"]
 
-        return HttpResponse(json.dumps(Busy.getFree([request.user.profile], start_date, end_date)))
 
-    if data_type == "setBusy":
-        try:
-            start_date = request.GET['start_date']
-            available_array = request.GET['available_array']
-        except:
-            return HttpResponseBadRequest("start_date and available_array is required")
-        try:
-            start_date = datetime.strptime(start_date, "%m/%d/%Y")
-        except:
-            return HttpResponseBadRequest("Date must be in format m/d/Y")
-        try:
-            available_array = json.loads(available_array)
-        except:
-            return HttpResponseBadRequest("available array must be json")
+#     if data_type == "getFree":
+#         try:
+#             start_date = request.GET['start_date']
+#             end_date = request.GET['end_date']
+#         except:
+#             return HttpResponseBadRequest("start_date and end_date required")
+
+#         try:
+#             start_date = datetime.strptime(start_date, "%m/%d/%Y")
+#             end_date = datetime.strptime(end_date, "%m/%d/%Y")
+#         except:
+#             return HttpResponseBadRequest("Date must be in format m/d/Y")
+
+#         return HttpResponse(json.dumps(Busy.getFree([request.user.profile], start_date, end_date)))
+
+#     if data_type == "setBusy":
+#         try:
+#             start_date = request.GET['start_date']
+#             available_array = request.GET['available_array']
+#         except:
+#             return HttpResponseBadRequest("start_date and available_array is required")
+#         try:
+#             start_date = datetime.strptime(start_date, "%m/%d/%Y")
+#         except:
+#             return HttpResponseBadRequest("Date must be in format m/d/Y")
+#         try:
+#             available_array = json.loads(available_array)
+#         except:
+#             return HttpResponseBadRequest("available array must be json")
         
-        for available in available_array:
-            if available:
-                Busy.objects.filter(start_date__gte=available).filter(end_date__lte)
-            start_date += timedelta(minutes=30)
+#         for available in available_array:
+#             if available:
+#                 Busy.objects.filter(start_date__gte=available).filter(end_date__lte)
+#             start_date += timedelta(minutes=30)
 
 @login_required
 def busy(request):
