@@ -97,34 +97,38 @@ class Event(models.Model):
 
     #numbers
     def getOverlapHeatMap(self):
-        super_arr = []
-        final_arr = []
-        new_arr = []
-        event_start_date = self.start_date
-        event_end_date = self.end_date
-        #Queryset of profiles
-        profiles = self.profile_set.all()
+        heat = []
+        for day in self.getOverlapProfiles():
+            heat.append(len(day))
+        return heat
+#         super_arr = []
+#         final_arr = []
+#         new_arr = []
+#         event_start_date = self.start_date
+#         event_end_date = self.end_date
+#         #Queryset of profiles
+#         profiles = self.profile_set.all()
 
-        for x in profiles:
-            #Get free time intervals of profile
-            arr = x.getFreeArray(event_start_date,event_end_date)
-            super_arr.append(arr)
-        #create empty array to add everything in
+#         for x in profiles:
+#             #Get free time intervals of profile
+#             arr = x.getFreeArray(event_start_date,event_end_date)
+#             super_arr.append(arr)
+#         #create empty array to add everything in
     
-        for i in range(len(super_arr[0])):
-            final_arr.append(0)
-        #add all the arrays together
-        for a in super_arr:
-            for b in a:
-                final_arr[b] = final_arr[b] + super_arr[a][b]
-#Gives fractional map
-#        #create array of fractions to represent what percent of people are free at any time
-#        for i in final_arr:
-#            new_arr.append(final_arr[i]/len(super_arr))
-#        return new_arr
+#         for i in range(len(super_arr[0])):
+#             final_arr.append(0)
+#         #add all the arrays together
+#         for a in super_arr:
+#             for b in a:
+#                 final_arr[b] = final_arr[b] + super_arr[a][b]
+# #Gives fractional map
+# #        #create array of fractions to represent what percent of people are free at any time
+# #        for i in final_arr:
+# #            new_arr.append(final_arr[i]/len(super_arr))
+# #        return new_arr
 
-#Gives whole number map
-        return final_arr
+# #Gives whole number map
+#         return final_arr
     
     #profiles
     # def getOverlapProfiles(self):
@@ -176,14 +180,15 @@ class Event(models.Model):
             for time in Free.timeGenerator(self.start_date, self.end_date, timedelta(minutes=30)):
                 peopleFree = len(profilesArray[i])
                 if(peopleFree >= consecutivePeople):
-                    if freeLength > self.length:
+                    if freeLength == 0:
+                        startFree = time
+                    if freeLength >= self.length:
                         bestTimes.append((startFree, time))
                         startFree += timedelta(minutes=30)
                     else:
                         freeLength += .5
                 else:
                     freeLength = 0
-                    startFree = time
                 i += 1
             return bestTimes
 

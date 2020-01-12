@@ -203,5 +203,6 @@ a:hover{
 }
 #optimalTime{
   width: 49%;
+  text-align: center;
   display: inline-block
 }

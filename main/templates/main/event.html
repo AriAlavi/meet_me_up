@@ -17,7 +17,7 @@ $(".join").click(function(){
 </script>
 {% else %}
 <h2 style="width: 100%" align="center">{{event.title}}</h2>
-<div id="optimal">
+<div id="optimal" style="margin-bottom: 10px;">
   <h4>Optimal Times:</h4>
   {% for time in event.getOptimalTimes %}
     <span id="optimalTime">{{time.0}} - {{time.1}}</span>
@@ -28,12 +28,23 @@ $(".join").click(function(){
 </div>
 <script>
 function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
-    getData("freeInterface", {"data_type" : "getFree", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
+    getData("freeInterface", {"data_type" : "getEventHeatmap", "event" : "{{event.code_name}}"}).then(function(data){
         data = JSON.parse(data)
+        console.log(data)
         $(".hour").removeClass("selected");
+        var max = 0;
+        for(let i = 0; i < data.length; i ++){
+          if(data[i] > max){
+            max = i;
+          }
+        }
+        if(max == 0){
+          return;
+        }
         for(let i = 0; i < data.length; i++){
-            if(data[i] == 1){
+            if(data[i] > 0){
                 $("#" + String(i) + ".hour").addClass("selected");
+                $("#"+ String(i) + ".hour")[0].setAttribute("style", "opacity:" + data[i]/max + ";")
             }
         }
     })
