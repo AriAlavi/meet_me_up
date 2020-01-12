@@ -51,7 +51,7 @@ def register(request):
 
 @login_required
 def freeInterface(request):
-    DATA_TYPES = ["getFree", "setFree"]
+    DATA_TYPES = ["getFree", "getEventFree"]
     try:
         data_type = request.GET["data_type"]
     except:
@@ -59,19 +59,39 @@ def freeInterface(request):
     if data_type not in DATA_TYPES:
         return HttpResponseBadRequest("{} is not a valid data type. Pick from: {}".format(data_type, DATA_TYPES))
     
-    if data_type == "getFree":
+    if data_type == "getFree" or data_type == "getEventFree":
         try:
             start_date = request.GET['start_date']
             end_date = request.GET['end_date']
         except:
-            return HttpResponseBadRequest("start_date and end_date variables required")
+            return HttpResponseBadRequest("start_date and end_date arguments required")
         try:
             start_date = datetime.strptime(start_date, "%m/%d/%Y")
             end_date = datetime.strptime(end_date, "%m/%d/%Y")
         except:
             return HttpResponseBadRequest("dates must be in m/d/Y form")
 
-        return HttpResponse(json.dumps(request.user.profile.getFreeArray(start_date, end_date)))
+        if data_type == "getFree":
+            return HttpResponse(json.dumps(request.user.profile.getFreeArray(start_date, end_date)))
+        elif data_type == "getEventFree":
+            try:
+                event = request.GET['event']
+            except:
+                return HttpResponseBadRequest("event argument required")
+            try:
+                event = Event.objects.get(code_name=event)
+            except:
+                return HttpResponseNotFound("{} is not a valid event".format(event))
+            results = {}
+            for profile in event.profile_set.all():
+                results[profile.id] = profile.getFreeArray(start_date, end_date)
+            return HttpResponse(json.dumps(results))
+
+        else:
+            raise Exception("Logic error")
+
+    return HttpResponseBadRequest("{} is not declared in the interface".format(data_type))
+    
 
 # @login_required
 # def busyInterface(request):
