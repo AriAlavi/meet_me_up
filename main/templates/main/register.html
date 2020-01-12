@@ -1,9 +1,15 @@
 {% extends "main/base.html" %}
 
 {% block content %}
-<form method="post">
-    {%csrf_token%}
-    {{form.as_p}}
-    <button type="submit">Register</button>
-</form>
+<div id = "register">
+    <form method="post">
+        {%csrf_token%}
+        {{form.as_p}}
+        <div class="main">
+            <div class="sub-main">
+            <button class="button-one" type="submit">Register</button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}
