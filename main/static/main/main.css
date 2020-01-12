@@ -21,6 +21,10 @@ body {
 
 }
 
+
+.arrow{
+  cursor: pointer;
+}
   br {
         line-height: 150%;
      }
@@ -163,4 +167,41 @@ a:hover{
 #wrap { 
   width: 900px; 
   margin: 0 auto; 
+}
+
+.hour{
+  width: 100%;
+  height: 20px;
+  padding: 2px;
+  background-color: gray;
+  border: solid .5px  black;
+}
+.hour:nth-child(odd){
+  border-bottom: solid 1px black;
+}
+.hour:nth-child(even){
+  border-bottom: dotted .5px gray;
+}
+.column{
+  display: inline-block;
+  overflow: hidden;
+  width: 100px;
+}
+.timelabel{
+  width: 100%;
+  height: 20px;
+  padding: 2px;
+}
+.eventHolder{
+  background-color: lightgray;
+}
+.hour.selected{
+  background-color: green;
+}
+.eventHolder div{
+  user-select: none;
+}
+#optimalTime{
+  width: 49%;
+  display: inline-block
 }

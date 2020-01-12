@@ -13,6 +13,7 @@
             <div id='dates'> {{E.start_date}} - {{E.end_date}} </div>
             <div id='creator'> Creator: {{E.creator}} </div>
             <div id='attendees'>Attendees: {{E.attendeesFormatted}}</div>
+            <div id="length">Length {{E.length}} hours</div>
             <a href="{%url 'event' code_name=E.code_name %}" style="color:white">Click for event details</a>
         </div>
     {% endfor %}

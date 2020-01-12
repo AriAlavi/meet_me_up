@@ -68,7 +68,20 @@ class Event(models.Model):
     title = models.CharField(max_length=50)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
+    length = models.PositiveSmallIntegerField(default=1)
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
+
+    @staticmethod
+    def date_to_js(givenDate):
+        assert isinstance(givenDate, datetime)
+        return datetime.strftime(givenDate, "%d %b %Y %H:%M:%S")
+
+    def start_date_js(self):
+        return Event.date_to_js(self.start_date)
+
+    def end_date_js(self):
+        return Event.date_to_js(self.end_date)
+
 
     def attendeesFormatted(self):
         attending = self.attendees
@@ -76,7 +89,7 @@ class Event(models.Model):
             return ""
         if attending.count() == 1:
             return attending.first()
-        return ", ".join(attending)
+        return ", ".join([str(x) for x in attending])
 
     @property
     def attendees(self):
@@ -114,26 +127,75 @@ class Event(models.Model):
         return final_arr
     
     #profiles
-    def getOverlapProfiles(self):
-        final_arr = []
-        super_arr = []
-        event_start_date = self.start_date
-        event_end_date = self.end_date
-        #Queryset of profiles
-        profiles = self.profile_set.all()
+    # def getOverlapProfiles(self):
+    #     final_arr = []
+    #     super_arr = []
+    #     event_start_date = self.start_date
+    #     event_end_date = self.end_date
+    #     #Queryset of profiles
+    #     profiles = self.profile_set.all()
         
-        for x in profiles:
-            #Get free time intervals of profile
-            arr = x.getFreeArrayProfiles(event_start_date,event_end_date)
-            super_arr.append(arr)
-        #add all the arrays together
-        for a in super_arr:
-            arr = []
-            for b in a:
-                if super_arr[a][b] is not 0:
-                    arr.append(super_arr[a][b])
-            final_arr.append(arr)
-        return final_arr
+    #     for x in profiles:
+    #         #Get free time intervals of profile
+    #         arr = x.getFreeArrayProfiles(event_start_date,event_end_date)
+    #         super_arr.append(arr)
+    #     #add all the arrays together
+    #     for a in super_arr:
+    #         arr = []
+    #         for b in a:
+    #             if super_arr[a][b] is not 0:
+    #                 arr.append(super_arr[a][b])
+    #         final_arr.append(arr)
+    #     return final_arr
+    def getOverlapProfiles(self):
+        all_overlaps = []
+
+        for profile in self.attendees:
+            i = 0
+            for free in profile.getFreeArray(self.start_date, self.end_date):
+                if free:
+                    try:
+                        all_overlaps[i].append(profile)
+                    except:
+                        all_overlaps.append([profile,])
+                else:
+                    try:
+                        all_overlaps[i]
+                    except:
+                        all_overlaps.append([])
+                i += 1
+
+        return all_overlaps
+
+    def getOptimalTimes(self):
+        def getOptimalTimesInner(consecutivePeople, profilesArray):
+            bestTimes = []
+            i = 0
+            freeLength = 0
+            startFree = None
+            for time in Free.timeGenerator(self.start_date, self.end_date, timedelta(minutes=30)):
+                peopleFree = len(profilesArray[i])
+                if(peopleFree >= consecutivePeople):
+                    if freeLength > self.length:
+                        bestTimes.append((startFree, time))
+                        startFree += timedelta(minutes=30)
+                    else:
+                        freeLength += .5
+                else:
+                    freeLength = 0
+                    startFree = time
+                i += 1
+            return bestTimes
+
+        profilesArray = self.getOverlapProfiles()
+        if not profilesArray:
+            return [None]
+        
+        for consecutivePeople in range(self.attendees.count()+1, 1, -1):
+            result = getOptimalTimesInner(consecutivePeople, profilesArray)
+            if result:
+                return result
+        return []
 
     class Meta:
         ordering = ("-start_date", "-end_date")

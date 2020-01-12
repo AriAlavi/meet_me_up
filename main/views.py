@@ -11,6 +11,7 @@ from main.forms import *
 from datetime import datetime, timedelta
 import json
 
+@login_required
 def event(request, code_name):
     event = Event.objects.get(code_name=code_name)
     context = {
@@ -23,6 +24,7 @@ def home(request):
     }
     return render(request, "main/home.html", context)
 
+@login_required
 def index(request):
     context = {
         'event': request.user.profile.events.all()
@@ -54,7 +56,7 @@ def register(request):
 @login_required
 def freeInterface(request):
     if request.POST:
-        DATA_TYPES = ["setFree"]
+        DATA_TYPES = ["setFree", "joinEvent"]
         try:
             data_type = request.POST['data_type']
         except:
@@ -108,6 +110,18 @@ def freeInterface(request):
             #     i += 1
             # [x.save() for x in freeList]
             # return HttpResponse()
+        elif data_type == "joinEvent":
+            try:
+                event_url = request.POST['event_url']
+            except:
+                return HttpResponseBadRequest("event_url is required")
+            try:
+                event = Event.objects.get(code_name=event_url)
+            except:
+                return HttpResponseBadRequest("'{}' is not a valid event url".format(event_url))
+            request.user.profile.events.add(event)
+            return HttpResponse()
+
         return HttpResponseBadRequest("{} is not declared".format(data_type))
     else:
         DATA_TYPES = ["getFree", "getEventFree"]
@@ -166,12 +180,15 @@ def create(request):
         end_date = request.POST['end_date']
         name = request.POST['event_name']
         url = request.POST['event_url']
+        length = request.POST['length']
 
         REQUIRED_FIELDS = {
             "Start date" : start_date,
             "End date" : end_date,
-            "Name" : name
+            "Name" : name,
+            "Length" : length
         }
+
         error = []
         for key, value in REQUIRED_FIELDS.items():
             if not value:
@@ -180,7 +197,18 @@ def create(request):
             for e in error:
                 messages.warning(request, e)
             return render(request, "main/create.html") 
+        try:
+            length = float(length)
+        except:
+            messages.warning(request, "length must be a string")
+            return render(request, "main/create.html")
 
+        if length < .5 or length > 24:
+            messages.warning(request, "length cannot be less than .5 or greater than 24 hours")
+            return render(request, "main/create.html")
+        if length % .5:
+            messages.warning(request, "length must be in interval of 30 minutes")
+            return render(request, "main/create.html")
         if end_date < start_date:
             temp = start_date
             start_date = end_date
@@ -202,7 +230,7 @@ def create(request):
                 message.warning(request, "url '{}' is already taken".format(url))
                 return render(request, "main/create.html")
 
-        event = Event(start_date=start_date, end_date=end_date, title=name, code_name=url)
+        event = Event(start_date=start_date, end_date=end_date, title=name, code_name=url, length = length)
         event.creator = request.user.profile
         event.save()
         request.user.profile.events.add(event)
