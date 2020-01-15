@@ -46,12 +46,12 @@ class Profile(models.Model):
         freeArray = []
         for x in Free.timeGenerator(Free.makeTimezoneAware(start_date), Free.makeTimezoneAware(end_date), interval):
             freeArray.append(0)
-        print("ARRAY LENGTH:", len(freeArray))
+        # print("ARRAY LENGTH:", len(freeArray))
         def calculateIndex(start_date, interval, calculateDate):
             assert isinstance(start_date, datetime)
             assert isinstance(interval, timedelta)
             assert isinstance(calculateDate, datetime)
-            print("CALC INDEX:", start_date, ", ", calculateDate, ", ", floor((calculateDate-start_date)/interval))
+            # print("CALC INDEX:", start_date, ", ", calculateDate, ", ", floor((calculateDate-start_date)/interval))
             return floor((calculateDate-start_date)/interval)
 
         for freeObject in self.getFreeInterval(start_date, end_date):
@@ -70,6 +70,16 @@ class Event(models.Model):
     end_date = models.DateTimeField()
     length = models.PositiveSmallIntegerField(default=1)
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
+
+    def attendeesMap(self):
+        attendeeMap = {}
+        for x in self.attendees:
+            attendeeMap[x.id] = x
+        return attendeeMap
+
+    @staticmethod
+    def deleteOutOfDate():
+        Event.objects.filter(end_date__lte=datetime.now()).delete()
 
     @staticmethod
     def date_to_js(givenDate):
@@ -96,72 +106,37 @@ class Event(models.Model):
         return self.profile_set.all()
 
     #numbers
-    def getOverlapHeatMap(self):
+    def getOverlapHeatMap(self, start_date=None, end_date=None):
         heat = []
-        for day in self.getOverlapProfiles():
+        if not start_date:
+            start_date = self.start_date
+        if not end_date:
+            end_date = self.end_date
+
+        for day in self.getOverlapProfiles(start_date, end_date):
             heat.append(len(day))
         return heat
-#         super_arr = []
-#         final_arr = []
-#         new_arr = []
-#         event_start_date = self.start_date
-#         event_end_date = self.end_date
-#         #Queryset of profiles
-#         profiles = self.profile_set.all()
 
-#         for x in profiles:
-#             #Get free time intervals of profile
-#             arr = x.getFreeArray(event_start_date,event_end_date)
-#             super_arr.append(arr)
-#         #create empty array to add everything in
-    
-#         for i in range(len(super_arr[0])):
-#             final_arr.append(0)
-#         #add all the arrays together
-#         for a in super_arr:
-#             for b in a:
-#                 final_arr[b] = final_arr[b] + super_arr[a][b]
-# #Gives fractional map
-# #        #create array of fractions to represent what percent of people are free at any time
-# #        for i in final_arr:
-# #            new_arr.append(final_arr[i]/len(super_arr))
-# #        return new_arr
-
-# #Gives whole number map
-#         return final_arr
-    
-    #profiles
-    # def getOverlapProfiles(self):
-    #     final_arr = []
-    #     super_arr = []
-    #     event_start_date = self.start_date
-    #     event_end_date = self.end_date
-    #     #Queryset of profiles
-    #     profiles = self.profile_set.all()
-        
-    #     for x in profiles:
-    #         #Get free time intervals of profile
-    #         arr = x.getFreeArrayProfiles(event_start_date,event_end_date)
-    #         super_arr.append(arr)
-    #     #add all the arrays together
-    #     for a in super_arr:
-    #         arr = []
-    #         for b in a:
-    #             if super_arr[a][b] is not 0:
-    #                 arr.append(super_arr[a][b])
-    #         final_arr.append(arr)
-    #     return final_arr
-    def getOverlapProfiles(self):
+    def getOverlapProfiles(self, start_date=None, end_date=None, **kwargs):
         all_overlaps = []
+        to_json = kwargs.get("json", False)
+        if not start_date:
+            start_date = self.start_date
+        if not end_date:
+            end_date = self.end_date
 
         for profile in self.attendees:
             i = 0
-            for free in profile.getFreeArray(self.start_date, self.end_date):
+            for free in profile.getFreeArray(start_date, end_date):
+                if to_json:
+                    to_append = profile.user.username
+                else:
+                    to_append = profile
                 if free:
                     try:
-                        all_overlaps[i].append(profile)
+                        all_overlaps[i].append(to_append)
                     except:
-                        all_overlaps.append([profile,])
+                        all_overlaps.append([to_append,])
                 else:
                     try:
                         all_overlaps[i]
@@ -188,6 +163,8 @@ class Event(models.Model):
                     else:
                         freeLength += .5
                 else:
+                    if freeLength >= self.length:
+                        bestTimes.append((startFree, time))
                     freeLength = 0
                 i += 1
             return bestTimes
@@ -213,6 +190,10 @@ class Free(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
+
+    @staticmethod
+    def deleteOutOfDate():
+        Free.objects.filter(end_date__lte=datetime.now()).delete()
 
     @staticmethod
     def timeGenerator(current_time, end_time, step):

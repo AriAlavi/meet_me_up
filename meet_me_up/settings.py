@@ -47,6 +47,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost', 'ec2-3-14-7-180.us-east-2.compute.amazonaws.com', 'www.meetmeup.xyz', 'www.googel.website',]
 
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -119,7 +120,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LOGIN_REDIRECT_URL = '/index'
+LOGIN_REDIRECT_URL = 'index'
+LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = '/'
 
 # Internationalization

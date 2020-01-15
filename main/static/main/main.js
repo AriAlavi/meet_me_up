@@ -8,6 +8,7 @@ function stripDateDetails(givenDate){
         givenDate.setMinutes(30);
     }
     givenDate.setSeconds(0)
+    return givenDate
 }
 function datetimeToDate(givenDateTime){
     givenDateTime.setSeconds(0);
@@ -120,35 +121,36 @@ function dateDifference(date1, date2){
     return (date1 - date2) / 86400000
 }
 
-function createTable(start_date, date_range, end_date, parent, isEvent){
+function createTable(start_date, date_range, end_date, parent, min_start, min_end){
     function timeDescriptionGet(start_date, end_date){
         return formatDateDetailed(start_date) + " - " + formatDateDetailed(end_date);
     }
     if(date_range > 7){
         date_range = 7;
     }
-    end_date.setDate(start_date.getDate()+date_range);
+    end_date.setDate(start_date.getDate()+date_range-1);
     var timearea = document.createElement("div")
     timearea.setAttribute("style", "width: 100%; padding: 2px 6px 2px 6px;")
-    
-    // if(date_range == 7 && (! isEvent)){
-    //     var backarrow = document.createElement("span");
-    //     backarrow.id = "backarrow";
-    //     backarrow.className = "arrow";
-    //     backarrow.innerText = "←";
-    //     timearea.appendChild(backarrow);
-    // }
+    // console.log("MIN END:", min_end, " VS end_date  ", end_date)
+    if(date_range == 7 && start_date > min_start){
+        var backarrow = document.createElement("span");
+        backarrow.id = "backarrow";
+        backarrow.className = "arrow";
+        backarrow.innerText = "←";
+        timearea.appendChild(backarrow);
+    }
     var timedescription = document.createElement("span");
     timedescription.id = "timedescription";
+    timedescription.setAttribute("style", "width: 220px; display: inline-block; text-align: center;")
     timedescription.innerText = timeDescriptionGet(start_date, end_date);
     timearea.appendChild(timedescription);
-    // if(date_range == 7 && (! isEvent)){
-    //     var frontarrow = document.createElement("span");
-    //     frontarrow.id = "frontarrow";
-    //     frontarrow.innerText = "→";
-    //     frontarrow.className = "arrow";
-    //     timearea.appendChild(frontarrow);
-    // }
+    if(date_range == 7 && ((! min_end) || end_date < min_end)){
+        var frontarrow = document.createElement("span");
+        frontarrow.id = "frontarrow";
+        frontarrow.innerText = "→";
+        frontarrow.className = "arrow";
+        timearea.appendChild(frontarrow);
+    }
 
 
 
