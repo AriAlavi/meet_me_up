@@ -122,6 +122,8 @@ function dateDifference(date1, date2){
 
 function createTable(start_date, date_range, end_date, parent, isEvent){
     function timeDescriptionGet(start_date, end_date){
+        end_date = new Date(+end_date)
+        end_date.setDate(end_date.getDate()-1)
         return formatDateDetailed(start_date) + " - " + formatDateDetailed(end_date);
     }
     if(date_range > 7){
@@ -131,24 +133,25 @@ function createTable(start_date, date_range, end_date, parent, isEvent){
     var timearea = document.createElement("div")
     timearea.setAttribute("style", "width: 100%; padding: 2px 6px 2px 6px;")
     
-    // if(date_range == 7 && (! isEvent)){
-    //     var backarrow = document.createElement("span");
-    //     backarrow.id = "backarrow";
-    //     backarrow.className = "arrow";
-    //     backarrow.innerText = "←";
-    //     timearea.appendChild(backarrow);
-    // }
+    if(date_range == 7 && (! isEvent)){
+        var backarrow = document.createElement("span");
+        backarrow.id = "backarrow";
+        backarrow.className = "arrow";
+        backarrow.innerText = "←";
+        timearea.appendChild(backarrow);
+    }
     var timedescription = document.createElement("span");
     timedescription.id = "timedescription";
+    timedescription.setAttribute("style", "width: 220px; display: inline-block; text-align: center;")
     timedescription.innerText = timeDescriptionGet(start_date, end_date);
     timearea.appendChild(timedescription);
-    // if(date_range == 7 && (! isEvent)){
-    //     var frontarrow = document.createElement("span");
-    //     frontarrow.id = "frontarrow";
-    //     frontarrow.innerText = "→";
-    //     frontarrow.className = "arrow";
-    //     timearea.appendChild(frontarrow);
-    // }
+    if(date_range == 7 && (! isEvent)){
+        var frontarrow = document.createElement("span");
+        frontarrow.id = "frontarrow";
+        frontarrow.innerText = "→";
+        frontarrow.className = "arrow";
+        timearea.appendChild(frontarrow);
+    }
 
 
 

@@ -81,19 +81,40 @@ def freeInterface(request):
                 return HttpResponseBadRequest("dates must be in m/d/Y form")
             expected_bit = 0
             i = 0
-            # print("FULL LIST:", free_array)
+            print("FULL LIST:", free_array)
             last_date = start_date
+            Free.deleteOutOfDate()
+
+            start_date = Free.makeTimezoneAware(start_date)
+            end_date = Free.makeTimezoneAware(end_date)
+
+            Free.objects.filter(profile=request.user.profile).filter(start_date__gte=start_date).filter(end_date__gte=end_date).delete()
+            for intersect in Free.objects.filter(profile=request.user.profile).filter(start_date__gte=start_date):
+                if intersect.start_date < end_date:
+                    intersect.start_date = end_date
+                    intersect.save()
+            for intersect in Free.objects.filter(profile=request.user.profile).filter(end_date__lte=end_date):
+                if intersect.end_date > start_date:
+                    intersect.end_date = start_date
+                    intersect.save()
+
+
             for dt in Free.timeGenerator(start_date, end_date, timedelta(minutes=30)):
-                # print("[{}] actual[{}] given i[{}] DATE TIME:".format(expected_bit, free_array[i], i), dt)
+                print("[{}] actual[{}] given i[{}] DATE TIME:".format(expected_bit, free_array[i], i), dt)
                 if expected_bit != free_array[i]:
                     if expected_bit == 1:
-                        # print("flip free")
+                        print("flip free {} to {}".format(last_date, dt))
+
                         free = Free(profile=request.user.profile, start_date=last_date, end_date=dt)
                         free.save()
                         expected_bit = 0
                     else:
-                        # print("flip delete")
-                        Free.objects.filter(profile=request.user.profile).filter(start_date__gte=last_date).filter(end_date__gte=dt).delete()
+                        print("flip delete {} to {}".format(last_date, dt))
+                        # Free.objects.filter(profile=request.user.profile).filter(start_date__gte=last_date).filter(end_date__gte=dt).delete()
+                        # for after in Free.objects.filter(profile=request.user.profile).filter(start_date__gte=last_date):
+                        #     if after.end_date > last_date:
+                        #         after.end_date = last_date
+                        #         after.save()
                         expected_bit = 1
                     last_date = dt
                 i += 1
@@ -237,6 +258,7 @@ def create(request):
         event = Event(start_date=start_date, end_date=end_date, title=name, code_name=url, length = length)
         event.creator = request.user.profile
         event.save()
+        Event.deleteOutOfDate()
         request.user.profile.events.add(event)
         messages.success(request, "Event '{}' created".format(url))
         return redirect("event", code_name=event.code_name)
