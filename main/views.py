@@ -145,7 +145,7 @@ def freeInterface(request):
 
         return HttpResponseBadRequest("{} is not declared".format(data_type))
     else:
-        DATA_TYPES = ["getFree", "getEventFree", "getEventHeatmap"]
+        DATA_TYPES = ["getFree", "getEventFree", "getEventHeatmap", "getEventProfiles"]
         try:
             data_type = request.GET["data_type"]
         except:
@@ -168,7 +168,7 @@ def freeInterface(request):
             except:
                 return HttpResponseBadRequest("dates must be in m/d/Y form")
             return HttpResponse(json.dumps(request.user.profile.getFreeArray(start_date, end_date)))
-        elif data_type == "getEventFree" or data_type == "getEventHeatmap":
+        elif data_type == "getEventFree" or data_type == "getEventHeatmap" or data_type == "getEventProfiles":
             try:
                 event = request.GET['event']
             except:
@@ -183,7 +183,21 @@ def freeInterface(request):
                     results[profile.id] = profile.getFreeArray(event.start_date, event.end_date)
                 return HttpResponse(json.dumps(results))
             elif data_type == "getEventHeatmap":
-                return HttpResponse(json.dumps(event.getOverlapHeatMap()))
+                try:
+                    start_date = request.GET['start_date']
+                    end_date = request.GET['end_date']
+                    try:
+                        start_date = datetime.strptime(start_date, "%m/%d/%Y")
+                        end_date = datetime.strptime(end_date, "%m/%d/%Y")
+                    except:
+                        return HttpResponseBadRequest("dates must be in m/d/Y form")
+
+                    return HttpResponse(json.dumps(event.getOverlapHeatMap(start_date, end_date)))
+                    
+                except:
+                    return HttpResponse(json.dumps(event.getOverlapHeatMap()))
+            elif data_type == "getEventProfiles":
+                return HttpResponse(json.dumps(event.getOverlapProfiles(json=True)))
 
         else:
             raise Exception("Logic error")

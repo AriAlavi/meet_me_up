@@ -17,6 +17,7 @@ $(".join").click(function(){
 </script>
 {% else %}
 <h2 style="width: 100%" align="center">{{event.title}}</h2>
+<h3 style="width: 100%" align="center">{{event.length}} hours between {{event.start_date}} and {{event.end_date}}</h3>
 <div id="optimal" style="margin-bottom: 10px; background-color: lightpink;">
   <h4>Optimal Times:</h4>
   {% for time in event.getOptimalTimes %}
@@ -28,7 +29,7 @@ $(".join").click(function(){
 </div>
 <script>
 function loadDataIntoTable(start_date, end_date){
-    getData("freeInterface", {"data_type" : "getEventHeatmap", "event" : "{{event.code_name}}"}).then(function(data){
+    getData("freeInterface", {"data_type" : "getEventHeatmap", "event" : "{{event.code_name}}", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
         data = JSON.parse(data)
         $(".hour").removeClass("selected");
         var max = 0;
@@ -50,12 +51,28 @@ function loadDataIntoTable(start_date, end_date){
     })
 }
 
+$('body').on('click', '#backarrow', function() {
+    SELECTED_DATE.setDate(SELECTED_DATE.getDate()-1)
+    for(var elem of $(".eventHolder").children().toArray()){
+      elem.remove()
+    }
+    createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0], new Date("{{event.start_date_js}}"), new Date("{{event.end_date_js}}"));
+    loadDataIntoTable(SELECTED_DATE, END_DATE);
+});
+$('body').on('click', '#frontarrow', function() {
+    SELECTED_DATE.setDate(SELECTED_DATE.getDate()+1)
+    for(var elem of $(".eventHolder").children().toArray()){
+      elem.remove()
+    }
+    createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0], new Date("{{event.start_date_js}}"), new Date("{{event.end_date_js}}"));
+    loadDataIntoTable(SELECTED_DATE, END_DATE);
+});
 
 
 let SELECTED_DATE = new Date("{{event.start_date_js}}");
 let END_DATE = new Date("{{event.end_date_js}}");
 var date_difference = Math.ceil(dateDifference(END_DATE, SELECTED_DATE));
-createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0], true);
+createTable(SELECTED_DATE, date_difference, END_DATE, $(".eventHolder")[0], new Date("{{event.start_date_js}}"), new Date("{{event.end_date_js}}"));
 loadDataIntoTable(SELECTED_DATE, END_DATE);
 </script>
 {% endif %}

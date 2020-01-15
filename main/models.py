@@ -100,23 +100,37 @@ class Event(models.Model):
         return self.profile_set.all()
 
     #numbers
-    def getOverlapHeatMap(self):
+    def getOverlapHeatMap(self, start_date=None, end_date=None):
         heat = []
-        for day in self.getOverlapProfiles():
+        if not start_date:
+            start_date = self.start_date
+        if not end_date:
+            end_date = self.end_date
+
+        for day in self.getOverlapProfiles(start_date, end_date):
             heat.append(len(day))
         return heat
 
-    def getOverlapProfiles(self):
+    def getOverlapProfiles(self, start_date=None, end_date=None, **kwargs):
         all_overlaps = []
+        to_json = kwargs.get("json", False)
+        if not start_date:
+            start_date = self.start_date
+        if not end_date:
+            end_date = self.end_date
 
         for profile in self.attendees:
             i = 0
-            for free in profile.getFreeArray(self.start_date, self.end_date):
+            for free in profile.getFreeArray(start_date, end_date):
+                if to_json:
+                    to_append = profile.id
+                else:
+                    to_append = profile
                 if free:
                     try:
-                        all_overlaps[i].append(profile)
+                        all_overlaps[i].append(to_append)
                     except:
-                        all_overlaps.append([profile,])
+                        all_overlaps.append([to_append,])
                 else:
                     try:
                         all_overlaps[i]
@@ -143,6 +157,8 @@ class Event(models.Model):
                     else:
                         freeLength += .5
                 else:
+                    if freeLength >= self.length:
+                        bestTimes.append((startFree, time))
                     freeLength = 0
                 i += 1
             return bestTimes
