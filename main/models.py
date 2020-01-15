@@ -71,6 +71,12 @@ class Event(models.Model):
     length = models.PositiveSmallIntegerField(default=1)
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
+    def attendeesMap(self):
+        attendeeMap = {}
+        for x in self.attendees:
+            attendeeMap[x.id] = x
+        return attendeeMap
+
     @staticmethod
     def deleteOutOfDate():
         Event.objects.filter(end_date__lte=datetime.now()).delete()
@@ -123,7 +129,7 @@ class Event(models.Model):
             i = 0
             for free in profile.getFreeArray(start_date, end_date):
                 if to_json:
-                    to_append = profile.id
+                    to_append = profile.user.username
                 else:
                     to_append = profile
                 if free:

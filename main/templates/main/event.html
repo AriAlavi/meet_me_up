@@ -29,22 +29,30 @@ $(".join").click(function(){
 </div>
 <script>
 function loadDataIntoTable(start_date, end_date){
-    getData("freeInterface", {"data_type" : "getEventHeatmap", "event" : "{{event.code_name}}", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
+    getData("freeInterface", {"data_type" : "getEventProfiles", "event" : "{{event.code_name}}", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
         data = JSON.parse(data)
         $(".hour").removeClass("selected");
         var max = 0;
         for(let i = 0; i < data.length; i ++){
-          if(data[i] > max){
-            max = data[i];
+          if(data[i].length > max){
+            max = data[i].length;
           }
         }
         if(max == 0){
           return;
         }
         for(let i = 0; i < data.length; i++){
-            if(data[i] > 0){
+            if(data[i].length > 0){
                 $("#" + String(i) + ".hour").addClass("selected");
-                $("#"+ String(i) + ".hour")[0].setAttribute("style", "opacity:" + data[i]/max + ";")
+                $("#"+ String(i) + ".hour")[0].setAttribute("style", "opacity:" + data[i].length/max + ";")
+                title = ""
+                for(let person = 0; person < data[i].length; person++){
+                  title += data[i][person];
+                  if(person != data[i].length - 1){
+                    title += "\n"
+                  }
+                }
+                $("#"+ String(i) + ".hour")[0].setAttribute("title", title)
                
             }
         }
