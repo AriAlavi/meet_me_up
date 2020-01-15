@@ -269,10 +269,10 @@ def create(request):
                 message.warning(request, "url '{}' is already taken".format(url))
                 return render(request, "main/create.html")
 
+        Event.deleteOutOfDate()
         event = Event(start_date=start_date, end_date=end_date, title=name, code_name=url, length = length)
         event.creator = request.user.profile
         event.save()
-        Event.deleteOutOfDate()
         request.user.profile.events.add(event)
         messages.success(request, "Event '{}' created".format(url))
         return redirect("event", code_name=event.code_name)

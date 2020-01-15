@@ -79,7 +79,7 @@ class Event(models.Model):
 
     @staticmethod
     def deleteOutOfDate():
-        Event.objects.filter(end_date__lte=datetime.now()).delete()
+        Event.objects.filter(end_date__lte=Free.makeTimezoneAware(datetime.now())).delete()
 
     @staticmethod
     def date_to_js(givenDate):
