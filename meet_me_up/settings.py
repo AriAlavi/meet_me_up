@@ -40,6 +40,8 @@ except:
     SECRET_KEY = get_random_secret_key()
     SECRET_DATA["SECRET_KEY"] = SECRET_KEY
 
+GOOGLE_ANALYTICS_PROPERTY_ID = SECRET_DATA.get("TRACKING_CODE", None)
+
 
 # SECURITY WARNING: don't run with debug turned on in production! Don't tell me what to do!
 DEBUG = True
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
+    'analytical',
     'main.apps.MainConfig',
 ]
 
