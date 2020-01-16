@@ -1,5 +1,5 @@
 # Custom ignores
-*/secret_info.json
+secret_info.json
 *.pem
 */migrations/*.py
 static/*
