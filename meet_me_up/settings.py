@@ -26,6 +26,9 @@ try:
 except FileNotFoundError:
     SECRET_FILE = open(SECRET_FILE_PATH, "w+")
     SECRET_DATA = {}
+except PermissionError:
+    SECRET_FILE = None
+    SECRET_DATA = {}
 
 
 
@@ -148,7 +151,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-SECRET_FILE.close()
-SECRET_FILE = open(SECRET_FILE_PATH, "w+")
-json.dump(SECRET_DATA, SECRET_FILE)
-SECRET_FILE.close()
+if SECRET_FILE is not None:
+    SECRET_FILE.close()
+    SECRET_FILE = open(SECRET_FILE_PATH, "w+")
+    json.dump(SECRET_DATA, SECRET_FILE)
+    SECRET_FILE.close()
