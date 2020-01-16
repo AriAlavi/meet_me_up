@@ -1,7 +1,7 @@
 {% extends "main/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<div id = 'box2' class="col-sm-2">
+<div id = 'box2' class="col-sm-6 col-md-3">
 <form method="post">
     {%csrf_token%}
     {{form|crispy}}
