@@ -135,7 +135,7 @@ function createTable(start_date, date_range, end_date, parent, min_start, min_en
     var timearea = document.createElement("div")
     timearea.setAttribute("style", "width: 100%; padding: 2px 6px 2px 6px;")
     // console.log("MIN END:", min_end, " VS end_date  ", end_date)
-    if(date_range == 7 && start_date > min_start){
+    if(date_range == MAX_DATE_RANGE && start_date > min_start){
         var backarrow = document.createElement("span");
         backarrow.id = "backarrow";
         backarrow.className = "arrow";
