@@ -32,6 +32,7 @@ $(".eventHolder").mousedown(function(data){
     if(!$(data.target).hasClass("hour")){
         return;
     }
+    console.log("DRAGGING:", data)
     DRAGGING = data;
 })
 
@@ -118,17 +119,35 @@ $("*").mouseup(function(endpos){
         var endy = $(endelem).position().top;
         var elems =  massSelection(startx, endx, starty, endy, ".hour");
         var removeClass = $(startelem).hasClass("selected");
-        for(let elem in elems){
-            elem = elems[elem];
-            if(removeClass){
-                $(elem).removeClass("selected")
-            }else{
-                $(elem).addClass("selected")
-            }
-            
+        $(".hour").removeClass("hoverselectadd")
+        $(".hour").removeClass("hoverselectremove")
+        if(removeClass){
+            $(elems).removeClass("selected")
+        }else{
+            $(elems).addClass("selected")
         }
         CACHE = {}
         postFreedom(getFreeArray());
+    }
+})
+
+
+$(".eventHolder").mouseover(function(e){
+    if(DRAGGING){
+        let startpos = DRAGGING.target;
+        var startx = $(startpos).position().left;
+        var starty = $(startpos).position().top;
+        var endx = $(e.target).position().left;
+        var endy = $(e.target).position().top;
+        var elems = massSelection(startx, endx, starty, endy, ".hour")
+        var removeClass = $(startpos).hasClass("selected");
+        $(".hour").removeClass("hoverselectadd")
+        $(".hour").removeClass("hoverselectremove")
+        if(removeClass){
+            $(elems).addClass("hoverselectremove")
+        }else{
+            $(elems).addClass("hoverselectadd")
+        }
     }
 })
 

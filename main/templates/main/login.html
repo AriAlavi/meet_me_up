@@ -1,15 +1,13 @@
 {% extends "main/base.html" %}
-
+{% load crispy_forms_tags %}
 {% block content %}
-<div id = 'box2'>
+<div id = 'box2' class="col-sm-2">
 <form method="post">
     {%csrf_token%}
-    {{form.as_p}}
-    <div class="main">
-            <div class="sub-main">
-            <button class="button-one" type="submit">Login</button>
-            </div>
-        </div>
+    {{form|crispy}}
+    <div style="width: 100%; margin-top: 10px;" class="text-right">
+        <button class="button-one" type="submit">Login</button>
+    </div>
 </form>
 <div>
 {% endblock %}
