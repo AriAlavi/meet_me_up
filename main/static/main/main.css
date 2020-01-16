@@ -185,7 +185,6 @@ a:hover{
 .column{
   display: inline-block;
   overflow: hidden;
-  width: 100px;
 }
 .timelabel{
   width: 100%;
