@@ -198,6 +198,12 @@ a:hover{
 .hour.selected{
   background-color: green;
 }
+.hour.hoverselectadd{
+  background-color: lime;
+}
+.hour.hoverselectremove{
+  background-color: violet;
+}
 .eventHolder div{
   user-select: none;
 }
