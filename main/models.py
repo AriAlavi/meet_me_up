@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from datetime import datetime, timedelta
 from math import floor
@@ -217,4 +219,6 @@ class Free(models.Model):
     
         
 
-            
+@receiver(pre_delete, sender=Free)
+def log_deleted_free(sender, instance, using, **kwargs):
+    print("{} deleted".format(instance))

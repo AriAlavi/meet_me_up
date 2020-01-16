@@ -29,8 +29,11 @@ $(".join").click(function(){
 </div>
 <script>
 function loadDataIntoTable(start_date, end_date){
+    end_date = new Date(+end_date)
+    end_date.setDate(end_date.getDate()+1)
     getData("freeInterface", {"data_type" : "getEventProfiles", "event" : "{{event.code_name}}", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
         data = JSON.parse(data)
+        console.log("DATA:", data)
         $(".hour").removeClass("selected");
         var max = 0;
         for(let i = 0; i < data.length; i ++){

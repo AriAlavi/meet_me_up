@@ -8,6 +8,8 @@
 </div>
 <script>
 function loadDataIntoTable(start_date=SELECTED_DATE, end_date=END_DATE){
+    end_date = new Date(+end_date)
+    end_date.setDate(end_date.getDate()+1)
     getData("freeInterface", {"data_type" : "getFree", "start_date" : dateToPython(start_date), "end_date" : dateToPython(end_date)}).then(function(data){
         data = JSON.parse(data)
         $(".hour").removeClass("selected");
@@ -73,9 +75,11 @@ function getFreeArray(){
 }
 
 function postFreedom(freeArray){
+    let local_end_date = new Date(+END_DATE)
+    local_end_date.setDate(local_end_date.getDate()+1)
     header = {
         "data_type": "setFree",
-        "csrfmiddlewaretoken" : getCookie("csrftoken"), "start_date" : dateToPython(SELECTED_DATE), "end_date" : dateToPython(END_DATE), "free_array" : JSON.stringify(freeArray) 
+        "csrfmiddlewaretoken" : getCookie("csrftoken"), "start_date" : dateToPython(SELECTED_DATE), "end_date" : dateToPython(local_end_date), "free_array" : JSON.stringify(freeArray) 
     }
     // console.log("Posted freedom array", freeArray)
     var callresult = $.post("{% url 'freeInterface' %}", header, function(data){
