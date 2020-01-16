@@ -127,8 +127,9 @@ function createTable(start_date, date_range, end_date, parent, min_start, min_en
     function timeDescriptionGet(start_date, end_date){
         return formatDateDetailed(start_date) + " - " + formatDateDetailed(end_date);
     }
-    if(date_range > 14){
-        date_range = 14;
+    MAX_DATE_RANGE = 14
+    if(date_range > MAX_DATE_RANGE){
+        date_range = MAX_DATE_RANGE;
     }
     end_date.setDate(start_date.getDate()+date_range-1);
     var timearea = document.createElement("div")
@@ -146,7 +147,7 @@ function createTable(start_date, date_range, end_date, parent, min_start, min_en
     timedescription.setAttribute("style", "width: 220px; display: inline-block; text-align: center;")
     timedescription.innerText = timeDescriptionGet(start_date, end_date);
     timearea.appendChild(timedescription);
-    if(date_range == 7 && ((! min_end) || end_date < min_end)){
+    if(date_range == MAX_DATE_RANGE && ((! min_end) || end_date < min_end)){
         var frontarrow = document.createElement("span");
         frontarrow.id = "frontarrow";
         frontarrow.innerText = "→";
